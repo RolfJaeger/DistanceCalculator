@@ -21,7 +21,15 @@ extension Double {
     }
 }
 
+enum ViewName: String {
+    case Loc1Lat
+    case Loc1Long
+    case Loc2Lat
+    case Loc2Long
+}
+
 struct DistanceView: View {
+    
     @Binding var latLoc1: CLLocationDegrees
     @Binding var longLoc1: CLLocationDegrees
     @Binding var latLoc2: CLLocationDegrees
@@ -39,12 +47,15 @@ struct DistanceView: View {
     @State var NortSouthLoc2 = "N"
     @State var EastWestLoc2 = "E"
 
-    fileprivate func restoreToDefaultView() {
-        hideKeyboard()
-        loc1LatViewVisible = false
-        loc1LongViewVisible = false
-        loc2LatViewVisible = false
-        loc2LongViewVisible = false
+    var txtSwitchFormat: String {
+        switch viewFormat {
+        case .DMS:
+            return "Switch to Raymarine Format"
+        case .DDM:
+            return "Switch to Deg Min Sec"
+        case .Raymarine:
+            return "Switch to Decimal Degress"
+        }
     }
     
     var body: some View {
@@ -72,100 +83,79 @@ struct DistanceView: View {
     
     fileprivate var MenuView: some View {
         HStack {
+            /*
             Button(action: {
                 hideKeyboard()
             }, label: {Image(systemName: "keyboard")})
             Text("|")
+            */
             Button(action: {
                 switch viewFormat {
                 case .DMS:
                     viewFormat = .Raymarine
                 case .DDM:
                     viewFormat = .DMS
-                default:
+                case .Raymarine:
                     viewFormat = .DDM
                 }
-            }, label: {Text("Switch Display Format")})
+            }, label: {Text(txtSwitchFormat)})
         }
     }
     
-    fileprivate var Location1Details_Rev0: some View {
-        VStack {
-            HStack {
-                if !loc1LatViewVisible && !loc1LongViewVisible {
-                    Text(NortSouthLoc1)
-                    Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                        .onTapGesture {
-                            loc1LatViewVisible.toggle()
-                            loc1LongViewVisible = false
-                            loc2LatViewVisible = false
-                            loc2LongViewVisible = false
-                        }
-                    Text(" | ")
-                    Text(EastWestLoc1)
-                    Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
-                        .onTapGesture {
-                            loc1LongViewVisible.toggle()
-                            loc1LatViewVisible = false
-                            loc2LatViewVisible = false
-                            loc2LongViewVisible = false
-                        }
-                }
-            }
-            if loc1LatViewVisible {
-                VStack {
-                    HStack {
-                        Text(NortSouthLoc1)
-                            .onTapGesture {
-                                NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
-                            }
-                        Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                    }
-                    .onTapGesture {
-                        loc1LatViewVisible = false
-                    }
-                    DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                        .frame(height: 100)
-                }
-            }
-            
-            if loc1LongViewVisible {
-                VStack {
-                    HStack {
-                        Text(EastWestLoc1)
-                            .onTapGesture {
-                                EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
-                            }
-                        Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
-                    }
-                    .onTapGesture {
-                        loc1LongViewVisible = false
-                    }
-                    DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                }
-            }
-        }
-    }
-
     fileprivate var Loc1Minimized: some View {
         HStack {
             Text(NortSouthLoc1)
             Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
                 .onTapGesture {
-                    loc1LatViewVisible.toggle()
-                    loc1LongViewVisible = false
-                    loc2LatViewVisible = false
-                    loc2LongViewVisible = false
+                    SetViewVisibility(viewName: .Loc1Lat)
                 }
             Text(" | ")
             Text(EastWestLoc1)
             Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
                 .onTapGesture {
-                    loc1LongViewVisible.toggle()
-                    loc1LatViewVisible = false
-                    loc2LatViewVisible = false
-                    loc2LongViewVisible = false
+                    SetViewVisibility(viewName: .Loc1Long)
+                    
                 }
+        }
+        .font(.title)
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+    }
+    
+    fileprivate var Loc1LatExpanded: some View {
+        VStack {
+            HStack {
+                Button(action: {
+                    NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
+                }, label: {
+                    Text(NortSouthLoc1)
+                })
+                Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+                    .onTapGesture {
+                        loc1LatViewVisible = false
+                    }
+            }
+            .font(.title)
+            DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                .frame(height: 100)
+        }
+    }
+    
+    fileprivate var Loc1LongExpanded: some View {
+        VStack {
+            HStack {
+                Button(action: {
+                    EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
+                }, label: {
+                    Text(EastWestLoc1)
+                })
+                Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
+                    .onTapGesture {
+                        loc1LongViewVisible = false
+                    }
+            }
+            .font(.title)
+            DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
         }
     }
     
@@ -177,39 +167,67 @@ struct DistanceView: View {
                 }
             }
             if loc1LatViewVisible {
-                VStack {
-                    HStack {
-                        Button(action: {
-                            NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
-                        }, label: {
-                            Text(NortSouthLoc1)
-                        })
-                        Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                            .onTapGesture {
-                                loc1LatViewVisible = false
-                            }
-                    }
-                    DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                        .frame(height: 100)
-                }
+                Loc1LatExpanded
             }
             
             if loc1LongViewVisible {
-                VStack {
-                    HStack {
-                        Button(action: {
-                            EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
-                        }, label: {
-                            Text(EastWestLoc1)
-                        })
-                        Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
-                            .onTapGesture {
-                                loc1LongViewVisible = false
-                            }
-                    }
-                    DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                }
+                Loc1LongExpanded
             }
+        }
+    }
+
+    fileprivate var Loc2Minimized: some View {
+        HStack {
+            Text(NortSouthLoc2)
+            Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                .onTapGesture {
+                    SetViewVisibility(viewName: .Loc2Lat)
+                }
+            Text(" | ")
+            Text(EastWestLoc2)
+            Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+                .onTapGesture {
+                    SetViewVisibility(viewName: .Loc2Long)
+                }
+        }
+        .font(.title)
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+    }
+    
+    fileprivate var Loc2LatExpanded: some View {
+        VStack {
+            HStack {
+                Button(action: {
+                    NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
+                }, label: {
+                    Text(NortSouthLoc2)
+                })
+                Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                    .onTapGesture {
+                        loc2LatViewVisible = false
+                    }
+            }
+            .font(.title)
+            DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
+        }
+    }
+
+    fileprivate var Loc2LongExpanded: some View {
+        VStack {
+            HStack {
+                Button(action: {
+                    EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
+                }, label: {
+                    Text(EastWestLoc2)
+                })
+                Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+                    .onTapGesture {
+                        loc2LongViewVisible = false
+                    }
+            }
+            .font(.title)
+            DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
         }
     }
 
@@ -217,56 +235,14 @@ struct DistanceView: View {
         VStack {
             HStack {
                 if !loc2LatViewVisible && !loc2LongViewVisible {
-                    Text(NortSouthLoc2)
-                    Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
-                        .onTapGesture {
-                            loc2LatViewVisible.toggle()
-                            loc2LongViewVisible = false
-                            loc1LatViewVisible = false
-                            loc1LongViewVisible = false
-                        }
-                    Text(" | ")
-                    Text(EastWestLoc2)
-                    Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
-                        .onTapGesture {
-                            loc2LongViewVisible.toggle()
-                            loc2LatViewVisible = false
-                            loc1LatViewVisible = false
-                            loc1LongViewVisible = false
-                        }
+                    Loc2Minimized
                 }
             }
             if loc2LatViewVisible {
-                VStack {
-                    HStack {
-                        Button(action: {
-                            NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
-                        }, label: {
-                            Text(NortSouthLoc2)
-                        })
-                        Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
-                            .onTapGesture {
-                                loc2LatViewVisible = false
-                            }
-                    }
-                    DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                }
+                Loc2LatExpanded
             }
             if loc2LongViewVisible {
-                VStack {
-                    HStack {
-                        Button(action: {
-                            EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
-                        }, label: {
-                            Text(EastWestLoc2)
-                        })
-                        Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
-                            .onTapGesture {
-                                loc2LongViewVisible = false
-                            }
-                    }
-                    DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                }
+                Loc2LongExpanded
             }
         }
     }
@@ -294,6 +270,23 @@ struct DistanceView: View {
         }
     }
     
+    fileprivate func SetViewVisibility(viewName: ViewName) {
+        loc1LatViewVisible = false
+        loc1LongViewVisible = false
+        loc2LatViewVisible = false
+        loc2LongViewVisible = false
+        switch viewName {
+        case .Loc1Lat:
+            loc1LatViewVisible.toggle()
+        case .Loc1Long:
+            loc1LongViewVisible.toggle()
+        case .Loc2Lat:
+            loc2LatViewVisible.toggle()
+        case .Loc2Long:
+            loc2LongViewVisible.toggle()
+        }
+    }
+    
     fileprivate func CalculateDistance(
         latLoc1: CLLocationDegrees,
         longLoc1: CLLocationDegrees,
@@ -314,7 +307,7 @@ struct DistanceView: View {
         let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
         let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
         let nauticalMilesPerKilometer = 0.539957
-        let strDistance = String(format: "%.3f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
+        let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
         return strDistance
     }
     
@@ -359,7 +352,7 @@ struct DistanceView: View {
     }
     
     fileprivate func DecimalDegrees(degrees: CLLocationDegrees) -> String {
-        let decimalDegrees = Double(degrees).rounded(toPlaces: 2)
+        let decimalDegrees = Double(degrees).rounded(toPlaces: 3)
         return "\(decimalDegrees)\u{00B0}"
     }
 
@@ -373,7 +366,7 @@ struct DistanceView: View {
 
     fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
         let d = Int(degrees)
-        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
+        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
         return "\(d)\u{00B0} \(fractualMinutes)'"
     }
 
