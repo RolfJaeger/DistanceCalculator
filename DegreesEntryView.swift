@@ -329,7 +329,7 @@ struct DegreesEntryView: View {
     }
     
     var Raymarine_View: some View {
-        VStack {
+        VStack(alignment: .center) {
             HStack {
                 if !showDegreesPicker {
                     Text("\(degrees)")
@@ -450,6 +450,7 @@ struct DegreesEntryView: View {
             Text("Tap and scroll.")
                 .font(.footnote)
         }
+        .frame(maxWidth: .infinity)
     }
     
     fileprivate func updateDegreesValue() {
@@ -474,7 +475,7 @@ struct DegreesEntryView: View {
     }
     
     var DMS_View: some View {
-        VStack {
+        VStack(alignment: .center) {
             HStack {
                 if !showDegreesPicker {
                     Text("\(degrees)")
@@ -547,6 +548,7 @@ struct DegreesEntryView: View {
             Text("Tap on any digit and then scroll.")
                 .font(.footnote)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var FormatSwitchButtons: some View {

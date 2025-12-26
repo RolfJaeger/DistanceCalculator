@@ -66,6 +66,27 @@ struct DistanceView: View {
                 .padding()
             MenuView
                 .padding()
+            Text("Distance")
+                .font(.title2)
+                .bold()
+                .padding(.bottom, 5)
+            DistanceView
+            Text("Location 1")
+                .font(.title2)
+                .bold()
+                .padding(.top, 20)
+                .padding(.bottom, 5)
+            Location1Details
+            Text("Location 2")
+                .font(.title2)
+                .bold()
+                .padding(.top, 20)
+                .padding(.bottom, 5)
+            Location2Details
+            Text("Tap coordinates to modify.")
+                .padding(.top, 20)
+            Spacer()
+            /*
             Form {
                 Section("Distance") {
                     DistanceView
@@ -77,6 +98,7 @@ struct DistanceView: View {
                     Location2Details
                 }
             }
+            */
         }
     }
     
@@ -98,11 +120,13 @@ struct DistanceView: View {
                     viewFormat = .DDM
                 }
             }, label: {Text(txtSwitchFormat)})
+            .buttonStyle(.bordered)
         }
     }
     
     fileprivate var Loc1Minimized: some View {
         HStack {
+            Spacer()
             Text(NortSouthLoc1)
             Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
                 .onTapGesture {
@@ -115,63 +139,77 @@ struct DistanceView: View {
                     SetViewVisibility(viewName: .Loc1Long)
                     
                 }
+            Spacer()
         }
-        .font(.title)
+        .font(.title2)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
     }
     
     fileprivate var Loc1LatExpanded: some View {
         VStack {
-            VStack {
-                HStack {
-                    Button(action: {
-                        NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
-                    }, label: {
-                        Text("Switch Hemisphere")
-                    })
-                    .buttonStyle(.bordered)
-                    Text(" | ")
-                    MinimizeButton
-                }
-                HStack {
-                    Text(NortSouthLoc1)
-                    Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                        /*
-                        .onTapGesture {
-                            loc1LatViewVisible = false
-                        }
-                        */
-                }
-                .font(.title)
-                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                    .frame(height: 100)
+            HStack {
+                Spacer()
+                Button(action: {
+                    NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
+                }, label: {
+                    Text("Hemisphere")
+                })
+                .buttonStyle(.bordered)
+                Text(" | ")
+                MinimizeButton
+                Spacer()
             }
+            HStack {
+                Spacer()
+                Text(NortSouthLoc1)
+                Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+                    /*
+                    .onTapGesture {
+                        loc1LatViewVisible = false
+                    }
+                    */
+                Spacer()
+            }
+            .font(.title)
+            DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                .frame(height: 100)
         }
+        .border(.primary, width: 2)
+        .padding(.leading, 5)
+        .padding(.trailing, 5)
     }
     
     fileprivate var Loc1LongExpanded: some View {
         VStack {
             HStack {
+                Spacer()
                 Button(action: {
                     EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
                 }, label: {
-                    Text("Switch Hemisphere")
+                    Text("Hemisphere")
                 })
                 .buttonStyle(.bordered)
                 Text(" | ")
                 MinimizeButton
+                Spacer()
             }
             HStack {
+                Spacer()
                 Text(EastWestLoc1)
                 Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
                     .onTapGesture {
                         loc1LongViewVisible = false
                     }
+                Spacer()
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
+                .frame(height: 100)
         }
+        .border(.primary, width: 2)
+        .padding(.leading, 5)
+        .padding(.trailing, 5)
     }
     
     fileprivate var Location1Details: some View {
@@ -193,6 +231,7 @@ struct DistanceView: View {
 
     fileprivate var Loc2Minimized: some View {
         HStack {
+            Spacer()
             Text(NortSouthLoc2)
             Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
                 .onTapGesture {
@@ -204,36 +243,39 @@ struct DistanceView: View {
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Long)
                 }
+            Spacer()
         }
-        .font(.title)
+        .font(.title2)
         .lineLimit(1)
         .minimumScaleFactor(0.5)
     }
     
     fileprivate var Loc2LatExpanded: some View {
         VStack {
-            VStack {
-                HStack {
-                    Button(action: {
-                        NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
-                    }, label: {
-                        Text("Switch Hemisphere")
-                    })
-                    .buttonStyle(.bordered)
-                    Text(" | ")
-                    MinimizeButton
-                }
-                HStack {
-                    Text(NortSouthLoc2)
-                    Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
-                        .onTapGesture {
-                            loc2LatViewVisible = false
-                        }
-                }
-                .font(.title)
-                DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
+            HStack {
+                Button(action: {
+                    NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
+                }, label: {
+                    Text("Hemisphere")
+                })
+                .buttonStyle(.bordered)
+                Text(" | ")
+                MinimizeButton
             }
+            HStack {
+                Text(NortSouthLoc2)
+                Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                    .onTapGesture {
+                        loc2LatViewVisible = false
+                    }
+            }
+            .font(.title)
+            DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
+                .frame(height: 100)
         }
+        .border(.primary, width: 2)
+        .padding(.leading, 5)
+        .padding(.trailing, 5)
     }
 
     fileprivate var Loc2LongExpanded: some View {
@@ -242,7 +284,7 @@ struct DistanceView: View {
                 Button(action: {
                     EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
                 }, label: {
-                    Text("Switch Hemisphere")
+                    Text("Hemisphere")
                 })
                 .buttonStyle(.bordered)
                 Text(" | ")
@@ -257,7 +299,11 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
+                .frame(height: 100)
         }
+        .border(.primary, width: 2)
+        .padding(.leading, 5)
+        .padding(.trailing, 5)
     }
 
     fileprivate var Location2Details: some View {
@@ -278,8 +324,10 @@ struct DistanceView: View {
 
     fileprivate var DistanceView: some View {
         HStack {
+            Spacer()
             Text(CalculateDistance(latLoc1: latLoc1, longLoc1: longLoc1, latLoc2: latLoc2, longLoc2: longLoc2))
             Text("nm")
+            Spacer()
         }
         .font(.title)
     }
