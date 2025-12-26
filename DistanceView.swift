@@ -77,7 +77,6 @@ struct DistanceView: View {
                     Location2Details
                 }
             }
-            MinimizeButton
         }
     }
     
@@ -124,20 +123,30 @@ struct DistanceView: View {
     
     fileprivate var Loc1LatExpanded: some View {
         VStack {
-            HStack {
-                Button(action: {
-                    NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
-                }, label: {
+            VStack {
+                HStack {
+                    Button(action: {
+                        NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
+                    }, label: {
+                        Text("Switch Hemisphere")
+                    })
+                    .buttonStyle(.bordered)
+                    Text(" | ")
+                    MinimizeButton
+                }
+                HStack {
                     Text(NortSouthLoc1)
-                })
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                    .onTapGesture {
-                        loc1LatViewVisible = false
-                    }
+                    Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+                        /*
+                        .onTapGesture {
+                            loc1LatViewVisible = false
+                        }
+                        */
+                }
+                .font(.title)
+                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                    .frame(height: 100)
             }
-            .font(.title)
-            DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 100)
         }
     }
     
@@ -147,8 +156,14 @@ struct DistanceView: View {
                 Button(action: {
                     EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
                 }, label: {
-                    Text(EastWestLoc1)
+                    Text("Switch Hemisphere")
                 })
+                .buttonStyle(.bordered)
+                Text(" | ")
+                MinimizeButton
+            }
+            HStack {
+                Text(EastWestLoc1)
                 Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
                     .onTapGesture {
                         loc1LongViewVisible = false
@@ -197,19 +212,27 @@ struct DistanceView: View {
     
     fileprivate var Loc2LatExpanded: some View {
         VStack {
-            HStack {
-                Button(action: {
-                    NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
-                }, label: {
+            VStack {
+                HStack {
+                    Button(action: {
+                        NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
+                    }, label: {
+                        Text("Switch Hemisphere")
+                    })
+                    .buttonStyle(.bordered)
+                    Text(" | ")
+                    MinimizeButton
+                }
+                HStack {
                     Text(NortSouthLoc2)
-                })
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
-                    .onTapGesture {
-                        loc2LatViewVisible = false
-                    }
+                    Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                        .onTapGesture {
+                            loc2LatViewVisible = false
+                        }
+                }
+                .font(.title)
+                DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
             }
-            .font(.title)
-            DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
         }
     }
 
@@ -219,8 +242,14 @@ struct DistanceView: View {
                 Button(action: {
                     EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
                 }, label: {
-                    Text(EastWestLoc2)
+                    Text("Switch Hemisphere")
                 })
+                .buttonStyle(.bordered)
+                Text(" | ")
+                MinimizeButton
+            }
+            HStack {
+                Text(EastWestLoc2)
                 Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
                     .onTapGesture {
                         loc2LongViewVisible = false
@@ -266,6 +295,7 @@ struct DistanceView: View {
                 }, label: {
                     Text("Minimize")
                 })
+                .buttonStyle(.bordered)
             }
         }
     }
