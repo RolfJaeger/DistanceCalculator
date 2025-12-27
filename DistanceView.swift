@@ -30,6 +30,8 @@ enum ViewName: String {
 
 struct DistanceView: View {
     
+    @ObservedObject var locationViewModel = LocationManager()
+    
     @Binding var latLoc1: CLLocationDegrees
     @Binding var longLoc1: CLLocationDegrees
     @Binding var latLoc2: CLLocationDegrees
@@ -83,8 +85,9 @@ struct DistanceView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 5)
             Location2Details
-            Text("Tap coordinates to modify.")
+            Text("Initially your location is shown.")
                 .padding(.top, 20)
+            Text("Tap coordinates to modify.")
             Spacer()
             /*
             Form {
@@ -99,6 +102,26 @@ struct DistanceView: View {
                 }
             }
             */
+        }
+        .onAppear {
+            let userLocation = locationViewModel.location
+            latLoc1 = userLocation.coordinate.latitude
+            if latLoc1 < 0 {
+                latLoc1 = -latLoc1
+                NortSouthLoc1 = "S"
+            }
+            longLoc1 = userLocation.coordinate.longitude
+            if longLoc1 < 0 {
+                longLoc1 = -longLoc1
+                EastWestLoc1 = "W"
+            }
+            
+            latLoc2 = latLoc1
+            NortSouthLoc2 = NortSouthLoc1
+            
+            longLoc2 = longLoc1
+            EastWestLoc2 = EastWestLoc1
+
         }
     }
     
@@ -444,7 +467,7 @@ struct DistanceView: View {
 
     fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
         let d = Int(degrees)
-        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
+        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
         return "\(d)\u{00B0} \(fractualMinutes)'"
     }
 
