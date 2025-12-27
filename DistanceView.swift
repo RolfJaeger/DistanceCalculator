@@ -30,7 +30,7 @@ enum ViewName: String {
 
 struct DistanceView: View {
     
-    @ObservedObject var locationViewModel = LocationManager()
+    @ObservedObject var locationManager = LocationManager()
     
     @Binding var latLoc1: CLLocationDegrees
     @Binding var longLoc1: CLLocationDegrees
@@ -49,6 +49,8 @@ struct DistanceView: View {
     @State var NortSouthLoc2 = "N"
     @State var EastWestLoc2 = "E"
 
+    @State var hintVisible = true
+    
     var txtSwitchFormat: String {
         switch viewFormat {
         case .DMS:
@@ -85,9 +87,11 @@ struct DistanceView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 5)
             Location2Details
-            Text("Initially your location is shown.")
-                .padding(.top, 20)
-            Text("Tap coordinates to modify.")
+            if hintVisible {
+                Text("Initially your location is shown.")
+                    .padding(.top, 20)
+                Text("Tap coordinates to modify.")
+            }
             Spacer()
             /*
             Form {
@@ -104,24 +108,37 @@ struct DistanceView: View {
             */
         }
         .onAppear {
-            let userLocation = locationViewModel.location
-            latLoc1 = userLocation.coordinate.latitude
-            if latLoc1 < 0 {
-                latLoc1 = -latLoc1
-                NortSouthLoc1 = "S"
-            }
-            longLoc1 = userLocation.coordinate.longitude
-            if longLoc1 < 0 {
-                longLoc1 = -longLoc1
+            let test = locationManager.lastKnownLocation
+            if let userLocation = locationManager.lastKnownLocation {
+                latLoc1 = userLocation.latitude
+                if latLoc1 < 0 {
+                    latLoc1 = -latLoc1
+                    NortSouthLoc1 = "S"
+                }
+                longLoc1 = userLocation.longitude
+                if longLoc1 < 0 {
+                    longLoc1 = -longLoc1
+                    EastWestLoc1 = "W"
+                }
+                
+                latLoc2 = latLoc1
+                NortSouthLoc2 = NortSouthLoc1
+                
+                longLoc2 = longLoc1
+                EastWestLoc2 = EastWestLoc1
+            } else {
+                latLoc1 = 0.0
+                NortSouthLoc1 = "N"
+                longLoc1 = 0.0
                 EastWestLoc1 = "W"
+                
+                latLoc2 = 0.0
+                NortSouthLoc1 = "N"
+                longLoc2 = 0.0
+                EastWestLoc1 = "W"
+                
+                hintVisible = false
             }
-            
-            latLoc2 = latLoc1
-            NortSouthLoc2 = NortSouthLoc1
-            
-            longLoc2 = longLoc1
-            EastWestLoc2 = EastWestLoc1
-
         }
     }
     
