@@ -22,10 +22,19 @@ fileprivate func DecimalDegrees(degrees: CLLocationDegrees) -> String {
 }
 
 fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
-    let d = Int(degrees)
-    let fractualMinutes = (degrees - Double(d)) * 60
-    let m = Int(fractualMinutes)
-    let s = Int((fractualMinutes - Double(m))*60)
+    var d = Int(degrees)
+    var fractualMinutes = (degrees - Double(d)) * 60
+    if fractualMinutes == 60 {
+        d += 1
+        fractualMinutes = 0
+    }
+    var m = Int(fractualMinutes)
+    var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
+    if doubleSeconds == 60 {
+        m += 1
+        doubleSeconds = 0
+    }
+    let s = Int(doubleSeconds)
     return "\(d)\u{00B0} \(m)' \(s)\""
 }
 
@@ -36,8 +45,9 @@ fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String 
 }
 
 fileprivate func extractTenth(degrees: CLLocationDegrees) -> String {
-    print("Degrees in tens: \(String(degrees))")
-    let strDegrees = String(degrees)
+    //print("Degrees in extractTenth: \(String(degrees))")
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 1 {
@@ -50,7 +60,8 @@ fileprivate func extractTenth(degrees: CLLocationDegrees) -> String {
 }
 
 fileprivate func extractHundredth(degrees: CLLocationDegrees) -> String {
-    let strDegrees = String(degrees)
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 2 {
@@ -63,7 +74,8 @@ fileprivate func extractHundredth(degrees: CLLocationDegrees) -> String {
 }
 
 fileprivate func extractThousandth(degrees: CLLocationDegrees) -> String {
-    let strDegrees = String(degrees)
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 3 {
@@ -75,8 +87,31 @@ fileprivate func extractThousandth(degrees: CLLocationDegrees) -> String {
     }
 }
 
-var degrees: CLLocationDegrees = 37.8234
-let strDegrees = String(Int(degrees)) + "."
+fileprivate func updateDegreesFromDMS(degrees: Int, minutes: Int, seconds: Int) -> CLLocationDegrees {
+    let decimalMinutes = Double(minutes)/60
+    let decimalSeconds = Double(seconds)/60/60
+    return CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
+}
+
+/*
+let degrees = 122
+let minutes = 20
+let seconds = 59
+
+var calculatedDegrees = updateDegreesFromDMS(degrees: degrees, minutes: minutes, seconds: seconds)
+var strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
+
+calculatedDegrees = 122.35
+strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
+*/
+
+var degrees: CLLocationDegrees = 54.799999
+let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+let test = degrees.rounded()
+print(degreesRounded)
+let strDegrees = String(Int(degreesRounded)) + "."
 + extractTenth(degrees: degrees)
 + extractHundredth(degrees: degrees)
 + extractThousandth(degrees: degrees)
+print(strDegrees)
+

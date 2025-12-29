@@ -68,54 +68,39 @@ struct DistanceView: View {
                 .font(.title)
                 .bold()
                 .padding()
-            MenuView
-                .padding()
+            FormatView
+                .padding(.bottom, 10)
             Text("Distance")
                 .font(.title2)
                 .bold()
-                .padding(.bottom, 5)
+                .padding(.bottom, 0)
             DistanceView
             Text("Location 1")
                 .font(.title2)
                 .bold()
-                .padding(.top, 20)
+                .padding(.top, 10)
                 .padding(.bottom, 5)
             Location1Details
             Text("Location 2")
                 .font(.title2)
                 .bold()
-                .padding(.top, 20)
+                .padding(.top, 10)
                 .padding(.bottom, 5)
             Location2Details
-            if hintVisible {
-                Text("Initially your location is shown.")
-                    .padding(.top, 20)
-                Text("Tap coordinates to modify.")
-            }
+            
+            HintView
             Spacer()
-            /*
-            Form {
-                Section("Distance") {
-                    DistanceView
-                }
-                Section("Location 1") {
-                    Location1Details
-                }
-                Section("Location 2") {
-                    Location2Details
-                }
-            }
-            */
         }
         .onAppear {
-            let test = locationManager.lastKnownLocation
             if let userLocation = locationManager.lastKnownLocation {
                 latLoc1 = userLocation.latitude
+                latLoc1 = Double(latLoc1).rounded(toPlaces: 3)
                 if latLoc1 < 0 {
                     latLoc1 = -latLoc1
                     NortSouthLoc1 = "S"
                 }
                 longLoc1 = userLocation.longitude
+                longLoc1 = Double(longLoc1).rounded(toPlaces: 3)
                 if longLoc1 < 0 {
                     longLoc1 = -longLoc1
                     EastWestLoc1 = "W"
@@ -126,6 +111,7 @@ struct DistanceView: View {
                 
                 longLoc2 = longLoc1
                 EastWestLoc2 = EastWestLoc1
+                
             } else {
                 latLoc1 = 0.0
                 NortSouthLoc1 = "N"
@@ -142,14 +128,32 @@ struct DistanceView: View {
         }
     }
     
-    fileprivate var MenuView: some View {
-        HStack {
-            /*
-            Button(action: {
-                hideKeyboard()
-            }, label: {Image(systemName: "keyboard")})
-            Text("|")
-            */
+    fileprivate var HintView: some View {
+        VStack {
+            if !loc1LatViewVisible && !loc1LongViewVisible && !loc2LatViewVisible && !loc2LongViewVisible {
+                if hintVisible {
+                    Text("Initially your location is shown.")
+                        .padding(.top, 20)
+                    Text("Tap coordinates to modify.")
+                }
+            }
+        }
+    }
+    
+    fileprivate var FormatView: some View {
+        VStack {
+            VStack {
+                Text("Location Format")
+                    .bold()
+                switch viewFormat {
+                case .DMS:
+                    Text("Degrees | Minutes | Seconds")
+                case .DDM:
+                    Text("Decimal Degrees")
+                case .Raymarine:
+                    Text("Degrees | Decimal Minutes")
+                }
+            }
             Button(action: {
                 switch viewFormat {
                 case .DMS:
@@ -204,17 +208,18 @@ struct DistanceView: View {
                 Spacer()
                 Text(NortSouthLoc1)
                 Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                    /*
-                    .onTapGesture {
-                        loc1LatViewVisible = false
-                    }
-                    */
+                /*
+                 .onTapGesture {
+                 loc1LatViewVisible = false
+                 }
+                 */
                 Spacer()
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 100)
+                .frame(height: 150)
         }
+        //.containerRelativeFrame(.horizontal)
         .border(.primary, width: 2)
         .padding(.leading, 5)
         .padding(.trailing, 5)
@@ -245,7 +250,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 100)
+                .frame(height: 150)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -311,7 +316,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 100)
+                .frame(height: 150)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -339,7 +344,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 100)
+                .frame(height: 150)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -475,16 +480,25 @@ struct DistanceView: View {
     }
 
     fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
-        let d = Int(degrees)
-        let fractualMinutes = (degrees - Double(d)) * 60
-        let m = Int(fractualMinutes)
-        let s = Int((fractualMinutes - Double(m))*60)
+        var d = Int(degrees)
+        var fractualMinutes = (degrees - Double(d)) * 60
+        if fractualMinutes == 60 {
+            d += 1
+            fractualMinutes = 0
+        }
+        var m = Int(fractualMinutes)
+        var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
+        if doubleSeconds == 60 {
+            m += 1
+            doubleSeconds = 0
+        }
+        let s = Int(doubleSeconds)
         return "\(d)\u{00B0} \(m)' \(s)\""
     }
 
     fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
         let d = Int(degrees)
-        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
+        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
         return "\(d)\u{00B0} \(fractualMinutes)'"
     }
 

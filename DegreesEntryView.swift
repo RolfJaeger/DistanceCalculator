@@ -11,8 +11,7 @@ import CoreLocation
 /*
 TODO List:
  - Do more manual test
- - Create icon
- - Create launch screen
+ - Add + - to DecimalDegree view
  */
 
 /*
@@ -38,6 +37,8 @@ enum PickerName: String {
 }
 
 struct DegreesEntryView: View {
+
+    @Environment(\.horizontalSizeClass) var sizeClass
 
     var orientation: String
     var maxDegrees: Int
@@ -92,6 +93,7 @@ struct DegreesEntryView: View {
         _degrees = State(initialValue: Int(locDegrees.wrappedValue))
         _decimalDegrees = State(initialValue: Double(locDegrees.wrappedValue))
         _viewFormat = viewFormat
+        initializeDegreeValues()
     }
 
     /*
@@ -105,37 +107,54 @@ struct DegreesEntryView: View {
     }
     */
     
-    fileprivate func initializeDegreeValues() {
-        minutesInDecimalFormat = decimalDegrees - Double(degrees)
-        minutesInDecimalFormat = minutesInDecimalFormat * 60
-        minutes = Int(minutesInDecimalFormat)
-        seconds = Int((minutesInDecimalFormat - Double(minutes))*60)
+    fileprivate mutating func initializeDegreeValues() {
+        var fractionalDegrees = decimalDegrees - Double(degrees)
+        fractionalDegrees = fractionalDegrees * 60
+        _minutesInDecimalFormat = State(initialValue: Double(fractionalDegrees))
+        _minutes = State(initialValue: Int(fractionalDegrees.rounded(toPlaces: 3)))
+        let fractionalMinutes = Int((minutesInDecimalFormat - Double(minutes))*60)
+        _seconds = State(initialValue: Int(fractionalMinutes))
         if let tryTenth = Int(extractTenth(degrees: decimalDegrees)) {
-            degreeTenth = tryTenth
+            _degreeTenth = State(initialValue: Int(tryTenth))
         }
         if let tryHundredth = Int(extractHundredth(degrees: decimalDegrees)) {
-            degreeHundredth = tryHundredth
+            _degreeHundredth = State(initialValue: Int(tryHundredth))
         }
         if let tryThousandth = Int(extractThousandth(degrees: decimalDegrees)) {
-            degreeThousandth = tryThousandth
+            _degreeThousandth = State(initialValue: Int(tryThousandth))
         }
+
         if let tryTenth = Int(extractTenth(degrees: minutesInDecimalFormat)) {
-            minuteTenth = tryTenth
+            _minuteTenth = State(initialValue: Int(tryTenth))
         }
         if let tryHundredth = Int(extractHundredth(degrees: minutesInDecimalFormat)) {
-            minuteHundredth = tryHundredth
+            _minuteHundredth = State(initialValue: Int(tryHundredth))
         }
         if let tryThousandth = Int(extractThousandth(degrees: minutesInDecimalFormat)) {
-            minuteThousandth = tryThousandth
+            _minuteThousandth = State(initialValue: Int(tryThousandth))
         }
+        printValues()
     }
     
+    fileprivate func printValues() {
+        print("Values in Initialize")
+        print("====================")
+        print("DegreeTenth: \(degreeTenth)")
+        print("DegreeHundredth: \(degreeHundredth)")
+        print("DegreeThousandth: \(degreeThousandth)")
+
+        print("")
+        
+        print("MinuteTenth: \(minuteTenth)")
+        print("DegreeHundredth: \(minuteHundredth)")
+        print("DegreeThousandth: \(minuteThousandth)")
+    }
     var body: some View {
         VStack {
             EntryView
         }
         .onAppear() {
-            initializeDegreeValues()
+            //initializeDegreeValues()
         }
         .ignoresSafeArea(.keyboard)
     }
@@ -163,14 +182,14 @@ struct DegreesEntryView: View {
         }
     }
 
-    private var DecimalDegrees_View: some View {
+    private var DecimalDegrees_View_Rev0: some View {
         VStack(alignment: .center) {
             VStack {
                 HStack {
                     if !showDegreesPicker {
                         Text("\(Int(decimalDegrees))")
                             .onTapGesture {
-                                toggleViewOfSelectedPicker(.Degrees)
+                                toggleViewOfSelectedPicker(.Degrees, hideAll: false)
                             }
                     } else {
                         PickerViewWithoutIndicator(selection: $degrees) {
@@ -193,7 +212,7 @@ struct DegreesEntryView: View {
                         Text("\(extractTenth(degrees: decimalDegrees))")
                             .padding(.leading, -5)
                             .onTapGesture {
-                                toggleViewOfSelectedPicker(.Tenth)
+                                toggleViewOfSelectedPicker(.Tenth, hideAll: false)
                             }
                     } else {
                         PickerViewWithoutIndicator(selection: $degreeTenth) {
@@ -218,7 +237,7 @@ struct DegreesEntryView: View {
                         Text("\(extractHundredth(degrees: decimalDegrees))")
                             .padding(.leading, -5)
                             .onTapGesture {
-                                toggleViewOfSelectedPicker(.Hundredth)
+                                toggleViewOfSelectedPicker(.Hundredth, hideAll: false)
                             }
                     } else {
                         PickerViewWithoutIndicator(selection: $degreeHundredth) {
@@ -243,7 +262,7 @@ struct DegreesEntryView: View {
                         Text("\(extractThousandth(degrees: decimalDegrees))")
                             .padding(.leading, -5)
                             .onTapGesture {
-                                toggleViewOfSelectedPicker(.Thousandth)
+                                toggleViewOfSelectedPicker(.Thousandth, hideAll: false)
                             }
                     } else {
                         PickerViewWithoutIndicator(selection: $degreeThousandth) {
@@ -276,7 +295,120 @@ struct DegreesEntryView: View {
         .frame(maxWidth: .infinity)
     }
 
-    fileprivate func toggleViewOfSelectedPicker(_ pickerName: PickerName) {
+    private var DecimalDegrees_View: some View {
+        VStack(alignment: .center) {
+            VStack {
+                HStack {
+                    if !showDegreesPicker {
+                        Text("\(Int(decimalDegrees))")
+                            .onTapGesture {
+                                toggleViewOfSelectedPicker(.Degrees, hideAll: false)
+                            }
+                    } else {
+                        PickerViewWithoutIndicator(selection: $degrees) {
+                            ForEach(0...maxDegrees, id: \.self) { value in
+                                Text("\(value)")
+                                    .tag(value)
+                                    .frame(minWidth: 50.0)
+                                    .font(.title)
+                                    .bold()
+                            }
+                        }
+                        .onChange(of: degrees) {
+                            updateDegreesValue()
+                        }
+                    }
+                    Text(".")
+                        .padding(.leading, -10)
+                    
+                    if !showTenthPicker {
+                        Text("\(degreeTenth)")
+                            .padding(.leading, -5)
+                            .onTapGesture {
+                                toggleViewOfSelectedPicker(.Tenth, hideAll: false)
+                            }
+                    } else {
+                        PickerViewWithoutIndicator(selection: $degreeTenth) {
+                            ForEach(0...9, id: \.self) { value in
+                                Text("\(value)")
+                                    .tag(value)
+                                    .frame(minWidth: 50.0)
+                                    .font(.title)
+                                    .bold()
+                            }
+                        }
+                        .padding(.leading, -50)
+                        .onAppear {
+                            degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
+                        }
+                        .onChange(of: degreeTenth) {
+                            updateDegreesValueDecimalDegreesFormat()
+                        }
+                    }
+                    
+                    if !showHundredthPicker {
+                        Text("\(degreeHundredth)")
+                            .padding(.leading, -5)
+                            .onTapGesture {
+                                toggleViewOfSelectedPicker(.Hundredth, hideAll: false)
+                            }
+                    } else {
+                        PickerViewWithoutIndicator(selection: $degreeHundredth) {
+                            ForEach(0...9, id: \.self) { value in
+                                Text("\(value)")
+                                    .tag(value)
+                                    .frame(minWidth: 50.0)
+                                    .font(.title)
+                                    .bold()
+                            }
+                        }
+                        .padding(.leading, -50)
+                        .onAppear {
+                            degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
+                        }
+                        .onChange(of: degreeHundredth) {
+                            updateDegreesValueDecimalDegreesFormat()
+                        }
+                    }
+                    
+                    if !showThousandthPicker {
+                        Text("\(degreeThousandth)")
+                            .padding(.leading, -5)
+                            .onTapGesture {
+                                toggleViewOfSelectedPicker(.Thousandth, hideAll: false)
+                            }
+                    } else {
+                        PickerViewWithoutIndicator(selection: $degreeThousandth) {
+                            ForEach(0...9, id: \.self) { value in
+                                Text("\(value)")
+                                    .tag(value)
+                                    .frame(minWidth: 50.0)
+                                    .font(.title)
+                                    .bold()
+                            }
+                        }
+                        .padding(.leading, -50)
+                        .onAppear {
+                            degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
+                        }
+                        .onChange(of: degreeThousandth) {
+                            updateDegreesValueDecimalDegreesFormat()
+                        }
+                    }
+                    
+                    Text("°")
+                        .padding(.leading,-5)
+                }
+                .font(.largeTitle)
+                .bold()
+                Text("Tap and scroll.")
+                    .font(.footnote)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    fileprivate func toggleViewOfSelectedPicker(_ pickerName: PickerName, hideAll: Bool) {
         
         showDegreesPicker = false
         showMinutesPicker = false
@@ -284,150 +416,286 @@ struct DegreesEntryView: View {
         showHundredthPicker = false
         showThousandthPicker = false
         
-        switch pickerName {
-        case .Degrees:
-            showDegreesPicker.toggle()
-        case .Minutes:
-            showMinutesPicker.toggle()
-        case .Tenth:
-            showTenthPicker.toggle()
-        case .Hundredth:
-            showHundredthPicker.toggle()
-        case .Thousandth:
-            showThousandthPicker.toggle()
-        default:
-            showSecondsPicker.toggle()
+        if !hideAll {
+            switch pickerName {
+            case .Degrees:
+                showDegreesPicker.toggle()
+            case .Minutes:
+                showMinutesPicker.toggle()
+            case .Tenth:
+                showTenthPicker.toggle()
+            case .Hundredth:
+                showHundredthPicker.toggle()
+            case .Thousandth:
+                showThousandthPicker.toggle()
+            default:
+                showSecondsPicker.toggle()
+            }
         }
     }
     
     var Raymarine_View: some View {
         VStack(alignment: .center) {
-            HStack {
-                if !showDegreesPicker {
-                    Text("\(degrees)")
-                        .onTapGesture {
-                            toggleViewOfSelectedPicker(.Degrees)
-                        }
-                    //.frame(width: 100, height: 35, alignment: .trailing)
-                } else {
-                    PickerViewWithoutIndicator(selection: $degrees) {
-                        ForEach(0...maxDegrees, id: \.self) { value in
-                            Text("\(value)")
-                                .tag(value)
-                                .frame(minWidth: 50.0)
-                                .font(.title)
-                                .bold()
-                        }
-                    }
-                    .onChange(of: degrees) {
-                        updateDegreesValue()
-                    }
+            if sizeClass == .regular {
+                HStack {
+                    RaymarineDetails
+                    PlusMinusInRaymarineView
                 }
-                Text("\u{00B0}")
-                
-                if !showMinutesPicker {
-                    Text("\(Int(minutesInDecimalFormat))")
-                        .padding(.leading,10)
-                        .onTapGesture {
-                            toggleViewOfSelectedPicker(.Minutes)
-                        }
-                } else {
-                    PickerViewWithoutIndicator(selection: $minutes) {
-                        ForEach(0...59, id: \.self) { value in
-                            Text("\(value)")
-                                .tag(value)
-                                .frame(minWidth: 50.0)
-                                .font(.title)
-                                .bold()
-                        }
-                    }
-                    .padding(.leading, -50)
-                    .onChange(of: minutes) {
-                        updateDegreesValueForRaymarineFormat()
-                    }
-                    
+                .font(.largeTitle)
+                .bold()
+            } else {
+                VStack {
+                    RaymarineDetails
+                    PlusMinusInRaymarineView
                 }
-                Text(".")
-                
-                if !showTenthPicker {
-                    Text("\(extractTenth(degrees: minutesInDecimalFormat))")
-                        .onTapGesture {
-                            toggleViewOfSelectedPicker(.Tenth)
-                        }
-                } else {
-                    PickerViewWithoutIndicator(selection: $minuteTenth) {
-                        ForEach(0...9, id: \.self) { value in
-                            Text("\(value)")
-                                .tag(value)
-                                .frame(minWidth: 50.0)
-                                .font(.title)
-                                .bold()
-                        }
-                    }
-                    .padding(.leading, -50)
-                    .onChange(of: minuteTenth) {
-                        updateDegreesValueForRaymarineFormat()
-                    }
-                }
-                
-                if !showHundredthPicker {
-                    Text("\(extractHundredth(degrees: minutesInDecimalFormat))")
-                        .padding(.leading,-5)
-                        .onTapGesture {
-                            toggleViewOfSelectedPicker(.Hundredth)
-                        }
-                } else {
-                    PickerViewWithoutIndicator(selection: $minuteHundredth) {
-                        ForEach(0...9, id: \.self) { value in
-                            Text("\(value)")
-                                .tag(value)
-                                .frame(minWidth: 50.0)
-                                .font(.title)
-                                .bold()
-                        }
-                    }
-                    .padding(.leading, -50)
-                    .onChange(of: minuteHundredth) {
-                        updateDegreesValueForRaymarineFormat()
-                    }
-                }
-                
-                if !showThousandthPicker {
-                    Text("\(extractThousandth(degrees: minutesInDecimalFormat))")
-                        .padding(.leading,-5)
-                        .onTapGesture {
-                            toggleViewOfSelectedPicker(.Thousandth)
-                        }
-                } else {
-                    PickerViewWithoutIndicator(selection: $minuteThousandth) {
-                        ForEach(0...9, id: \.self) { value in
-                            Text("\(value)")
-                                .tag(value)
-                                .frame(minWidth: 50.0)
-                                .font(.title)
-                                .bold()
-                        }
-                    }
-                    .onChange(of: minuteThousandth) {
-                        updateDegreesValueForRaymarineFormat()
-                    }
-                    .padding(.leading, -50)
-                }
-                
-                Text("'")
-                
+                .font(.largeTitle)
+                .bold()
             }
-            .font(.largeTitle)
-            .bold()
-            Text("Tap and scroll.")
+            Text("Tap and scroll or use + and -")
                 .font(.footnote)
         }
         .frame(maxWidth: .infinity)
     }
     
+    fileprivate var RaymarineDetails: some View {
+        HStack {
+            if !showDegreesPicker {
+                Text("\(degrees)")
+                    .onTapGesture {
+                        toggleViewOfSelectedPicker(.Degrees, hideAll: false)
+                    }
+                //.frame(width: 100, height: 35, alignment: .trailing)
+            } else {
+                PickerViewWithoutIndicator(selection: $degrees) {
+                    ForEach(0...maxDegrees, id: \.self) { value in
+                        Text("\(value)")
+                            .tag(value)
+                            .frame(minWidth: 50.0)
+                            .font(.title)
+                            .bold()
+                    }
+                }
+                .onChange(of: degrees) {
+                    updateDegreesValue()
+                }
+            }
+            Text("\u{00B0}")
+            
+            if !showMinutesPicker {
+                Text("\(minutes)")
+                    .padding(.leading,10)
+                    .onTapGesture {
+                        toggleViewOfSelectedPicker(.Minutes, hideAll: false)
+                    }
+            } else {
+                PickerViewWithoutIndicator(selection: $minutes) {
+                    ForEach(0...59, id: \.self) { value in
+                        Text("\(value)")
+                            .tag(value)
+                            .frame(minWidth: 50.0)
+                            .font(.title)
+                            .bold()
+                    }
+                }
+                .padding(.leading, -50)
+                .onChange(of: minutes) {
+                    updateDegreesValueForRaymarineFormat()
+                }
+                
+            }
+            Text(".")
+            
+            if !showTenthPicker {
+                Text("\(minuteTenth)")
+                    .onTapGesture {
+                        toggleViewOfSelectedPicker(.Tenth, hideAll: false)
+                    }
+            } else {
+                PickerViewWithoutIndicator(selection: $minuteTenth) {
+                    ForEach(0...9, id: \.self) { value in
+                        Text("\(value)")
+                            .tag(value)
+                            .frame(minWidth: 50.0)
+                            .font(.title)
+                            .bold()
+                    }
+                }
+                .padding(.leading, -50)
+                .onChange(of: minuteTenth) {
+                    updateDegreesValueForRaymarineFormat()
+                }
+            }
+            
+            if !showHundredthPicker {
+                Text("\(minuteHundredth)")
+                    .padding(.leading,-5)
+                    .onTapGesture {
+                        toggleViewOfSelectedPicker(.Hundredth, hideAll: false)
+                    }
+            } else {
+                PickerViewWithoutIndicator(selection: $minuteHundredth) {
+                    ForEach(0...9, id: \.self) { value in
+                        Text("\(value)")
+                            .tag(value)
+                            .frame(minWidth: 50.0)
+                            .font(.title)
+                            .bold()
+                    }
+                }
+                .padding(.leading, -50)
+                .onChange(of: minuteHundredth) {
+                    updateDegreesValueForRaymarineFormat()
+                }
+            }
+            
+            if !showThousandthPicker {
+                Text("\(minuteThousandth)")
+                    .padding(.leading,-5)
+                    .onTapGesture {
+                        toggleViewOfSelectedPicker(.Thousandth, hideAll: false)
+                    }
+            } else {
+                PickerViewWithoutIndicator(selection: $minuteThousandth) {
+                    ForEach(0...9, id: \.self) { value in
+                        Text("\(value)")
+                            .tag(value)
+                            .frame(minWidth: 50.0)
+                            .font(.title)
+                            .bold()
+                    }
+                }
+                .onChange(of: minuteThousandth) {
+                    updateDegreesValueForRaymarineFormat()
+                }
+                .padding(.leading, -50)
+            }
+            Text("'")
+        }
+    }
+    
+    fileprivate var PlusMinusInRaymarineView: some View {
+        HStack {
+            Button(action: {
+                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                if minuteThousandth < 9 {
+                    minuteThousandth += 1
+                }
+                else {
+                    let fractionalMinute = Int(String("\(minuteTenth)\(minuteHundredth)\(minuteThousandth)"))
+                    if fractionalMinute == 999 {
+                        if minutes < 59 {
+                            minutes += 1
+                            minutesInDecimalFormat += 1
+                        } else {
+                            if degrees < maxDegrees - 1 {
+                                degrees += 1
+                                minutes = 0
+                                minutesInDecimalFormat = 0.0
+                            }
+                        }
+                        minuteThousandth = 0
+                        minuteHundredth = 0
+                        minuteTenth = 0
+                    } else {
+                        if minuteHundredth < 9 {
+                            minuteHundredth += 1
+                            minuteThousandth = 0
+                        } else {
+                            if minuteTenth < 9 {
+                                minuteTenth += 1
+                                minuteHundredth = 0
+                            } else {
+                                if minutes < 59 {
+                                    minutes += 1
+                                    minutesInDecimalFormat += 1
+                                    minuteTenth = 0
+                                } else {
+                                    if degrees < maxDegrees - 1 {
+                                        degrees += 1
+                                        minutesInDecimalFormat = 0.0
+                                        minuteTenth = 0
+                                        minuteHundredth = 0
+                                        minuteThousandth = 0
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+                updateDegreesValueForRaymarineFormat()
+            }, label: {
+                Text("+")
+                    .font(.title3)
+            })
+            .buttonStyle(.bordered)
+            Button(action: {
+                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                if minuteThousandth > 0 {
+                    minuteThousandth -= 1
+                }
+                else {
+                    let fractionalMinute = Int(String("\(minuteTenth)\(minuteHundredth)\(minuteThousandth)"))
+                    if fractionalMinute == 000 {
+                        if minutes > 0 {
+                            minutes -= 1
+                            minutesInDecimalFormat -= 1
+                        } else {
+                            if degrees > 0 {
+                                degrees -= 1
+                                minutes = 59
+                                minutesInDecimalFormat = 59.0
+                            }
+                        }
+                        minuteThousandth = 9
+                        minuteHundredth = 9
+                        minuteTenth = 9
+                    } else {
+                        if minuteHundredth > 0 {
+                            minuteHundredth -= 1
+                            minuteThousandth = 9
+                        } else {
+                            if minuteTenth > 0 {
+                                minuteTenth -= 1
+                                minuteHundredth = 9
+                            } else {
+                                if minutes < 59 {
+                                    minutes += 1
+                                    minutesInDecimalFormat += 1
+                                    minuteTenth = 0
+                                } else {
+                                    if degrees < maxDegrees - 1 {
+                                        degrees += 1
+                                        minutesInDecimalFormat = 0.0
+                                        minuteTenth = 0
+                                        minuteHundredth = 0
+                                        minuteThousandth = 0
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+                updateDegreesValueForRaymarineFormat()
+            }, label: {
+                Text("-")
+                    .font(.title3)
+            })
+            .buttonStyle(.bordered)
+        }
+    }
+    
+
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutes, seconds: seconds)
         locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+    }
+    
+    fileprivate func updateDegreesFromDMS() {
+        let decimalMinutes = Double(minutes)/60
+        let decimalSeconds = Double(seconds)/60/60
+        locDegrees = CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
     }
     
     fileprivate func updateDegreesValueForRaymarineFormat() {
@@ -452,7 +720,7 @@ struct DegreesEntryView: View {
                 if !showDegreesPicker {
                     Text("\(degrees)")
                         .onTapGesture {
-                            toggleViewOfSelectedPicker(.Degrees)
+                            toggleViewOfSelectedPicker(.Degrees, hideAll: false)
                         }
                     //.frame(width: 100, height: 35, alignment: .trailing)
                 } else {
@@ -466,7 +734,7 @@ struct DegreesEntryView: View {
                         }
                     }
                     .onChange(of: degrees) {
-                        updateDegreesValue()
+                        updateDegreesFromDMS()
                     }
                 }
                 Text("\u{00B0}")
@@ -475,7 +743,7 @@ struct DegreesEntryView: View {
                     Text("\(minutes)")
                     //.frame(width: 100, height: 35, alignment: .trailing)
                         .onTapGesture {
-                            toggleViewOfSelectedPicker(.Minutes)
+                            toggleViewOfSelectedPicker(.Minutes, hideAll: false)
                         }
                 } else {
                     PickerViewWithoutIndicator(selection: $minutes) {
@@ -488,7 +756,7 @@ struct DegreesEntryView: View {
                         }
                     }
                     .onChange(of: minutes) {
-                        updateDegreesValue()
+                        updateDegreesFromDMS()
                     }
                 }
                 Text("'")
@@ -497,7 +765,7 @@ struct DegreesEntryView: View {
                     Text("\(seconds)")
                     //.frame(width: 100, height: 35, alignment: .trailing)
                         .onTapGesture {
-                            toggleViewOfSelectedPicker(.Seconds)
+                            toggleViewOfSelectedPicker(.Seconds, hideAll: false)
                         }
                 } else {
                     PickerViewWithoutIndicator(selection: $seconds) {
@@ -510,7 +778,7 @@ struct DegreesEntryView: View {
                         }
                     }
                     .onChange(of: seconds) {
-                        updateDegreesValue()
+                        updateDegreesFromDMS()
                     }
                 }
                 Text("\"")
@@ -610,8 +878,9 @@ struct DegreesEntryView: View {
 }
 
 fileprivate func extractTenth(degrees: CLLocationDegrees) -> String {
-    print("Degrees in tens: \(String(degrees))")
-    let strDegrees = String(degrees)
+    //print("Degrees in extractTenth: \(String(degrees))")
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 1 {
@@ -624,7 +893,8 @@ fileprivate func extractTenth(degrees: CLLocationDegrees) -> String {
 }
 
 fileprivate func extractHundredth(degrees: CLLocationDegrees) -> String {
-    let strDegrees = String(degrees)
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 2 {
@@ -637,7 +907,8 @@ fileprivate func extractHundredth(degrees: CLLocationDegrees) -> String {
 }
 
 fileprivate func extractThousandth(degrees: CLLocationDegrees) -> String {
-    let strDegrees = String(degrees)
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
     //NOTE: CLLocationsDegrees values ALWAYS contain a period
     if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 3 {
