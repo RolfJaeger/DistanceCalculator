@@ -206,7 +206,7 @@ struct DegreesEntryView: View {
             if !showDegreesPicker {
                 Text("\(Int(decimalDegrees))")
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Degrees, hideAll: false)
+                        togglePickerVisibility(.Degrees)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $degrees) {
@@ -229,7 +229,7 @@ struct DegreesEntryView: View {
                 Text("\(degreeTenth)")
                     .padding(.leading, -5)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Tenth, hideAll: false)
+                        togglePickerVisibility(.Tenth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $degreeTenth) {
@@ -254,7 +254,7 @@ struct DegreesEntryView: View {
                 Text("\(degreeHundredth)")
                     .padding(.leading, -5)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Hundredth, hideAll: false)
+                        togglePickerVisibility(.Hundredth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $degreeHundredth) {
@@ -279,7 +279,7 @@ struct DegreesEntryView: View {
                 Text("\(degreeThousandth)")
                     .padding(.leading, -5)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Thousandth, hideAll: false)
+                        togglePickerVisibility(.Thousandth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $degreeThousandth) {
@@ -331,6 +331,31 @@ struct DegreesEntryView: View {
         }
     }
     
+    fileprivate func togglePickerVisibility(_ selectedPicker: PickerName? = nil) {
+        showDegreesPicker = false
+        showMinutesPicker = false
+        showTenthPicker = false
+        showHundredthPicker = false
+        showThousandthPicker = false
+        if selectedPicker != nil {
+            switch selectedPicker {
+            case .Degrees:
+                showDegreesPicker.toggle()
+            case .Minutes:
+                showMinutesPicker.toggle()
+            case .Tenth:
+                showTenthPicker.toggle()
+            case .Hundredth:
+                showHundredthPicker.toggle()
+            case .Thousandth:
+                showThousandthPicker.toggle()
+            default:
+                showSecondsPicker.toggle()
+            }
+
+        }
+    }
+    
     var Raymarine_View: some View {
         VStack(alignment: .center) {
             if sizeClass == .regular {
@@ -359,7 +384,7 @@ struct DegreesEntryView: View {
             if !showDegreesPicker {
                 Text("\(degrees)")
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Degrees, hideAll: false)
+                        togglePickerVisibility(.Degrees)
                     }
                 //.frame(width: 100, height: 35, alignment: .trailing)
             } else {
@@ -382,7 +407,7 @@ struct DegreesEntryView: View {
                 Text("\(minutesForRaymarineView)")
                     .padding(.leading,10)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Minutes, hideAll: false)
+                        togglePickerVisibility(.Minutes)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $minutesForRaymarineView) {
@@ -405,7 +430,7 @@ struct DegreesEntryView: View {
             if !showTenthPicker {
                 Text("\(minuteTenth)")
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Tenth, hideAll: false)
+                        togglePickerVisibility(.Tenth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $minuteTenth) {
@@ -427,7 +452,7 @@ struct DegreesEntryView: View {
                 Text("\(minuteHundredth)")
                     .padding(.leading,-5)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Hundredth, hideAll: false)
+                        togglePickerVisibility(.Hundredth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $minuteHundredth) {
@@ -449,7 +474,7 @@ struct DegreesEntryView: View {
                 Text("\(minuteThousandth)")
                     .padding(.leading,-5)
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Thousandth, hideAll: false)
+                        togglePickerVisibility(.Thousandth)
                     }
             } else {
                 PickerViewWithoutIndicator(selection: $minuteThousandth) {
@@ -473,7 +498,7 @@ struct DegreesEntryView: View {
     fileprivate var PlusMinusInRaymarineView: some View {
         HStack {
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if minuteThousandth < 9 {
                     minuteThousandth += 1
                 }
@@ -527,7 +552,7 @@ struct DegreesEntryView: View {
             })
             .buttonStyle(.bordered)
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if minuteThousandth > 0 {
                     minuteThousandth -= 1
                 }
@@ -586,7 +611,7 @@ struct DegreesEntryView: View {
     fileprivate var PlusMinusInDecimalDegreesView: some View {
         HStack {
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if degreeThousandth < 9 {
                     degreeThousandth += 1
                 }
@@ -627,7 +652,7 @@ struct DegreesEntryView: View {
             })
             .buttonStyle(.bordered)
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if degreeThousandth > 0 {
                     degreeThousandth -= 1
                 }
@@ -671,7 +696,7 @@ struct DegreesEntryView: View {
     fileprivate var PlusMinusInDMSView: some View {
         HStack {
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if seconds < 59 {
                     seconds += 1
                 } else {
@@ -686,14 +711,14 @@ struct DegreesEntryView: View {
                          }
                      }
                 }
-                updateDegreesFromDMS()
+                locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
             }, label: {
                 Text("+")
                     .font(.title3)
             })
             .buttonStyle(.bordered)
             Button(action: {
-                toggleViewOfSelectedPicker(.Minutes, hideAll: true)
+                togglePickerVisibility()
                 if seconds >= 1 {
                     seconds -= 1
                 } else {
@@ -708,7 +733,7 @@ struct DegreesEntryView: View {
                          }
                      }
                 }
-                updateDegreesFromDMS()
+                locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
             }, label: {
                 Text("-")
                     .font(.title3)
@@ -729,6 +754,28 @@ struct DegreesEntryView: View {
         locDegrees = CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
     }
     
+    fileprivate func updateDegreesFromDMS(degrees: Int, minutes: Int, seconds: Int) -> CLLocationDegrees {
+        let decimalMinutes = Double(minutes)/60
+        let decimalSeconds = Double(seconds)/60/60
+        return CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
+    }
+    
+    fileprivate func updateDegreesFromDMS(originalDegrees: CLLocationDegrees, degrees: Int, minutes: Int, seconds: Int) -> CLLocationDegrees {
+        //First calculate the original degrees in seconds
+        let originalDegreesInSeconds = originalDegrees * 3600.0
+        print("Original Degrees in Seconds: \(originalDegreesInSeconds)")
+        //Now calculate the new degrees in seconds
+        let newDegreesInSeconds = Double(degrees) * 3600.0
+        let newMinutesInSeconds = Double(minutes) * 60.0
+        let newTotalInSeconds = newDegreesInSeconds + newMinutesInSeconds + Double(seconds)
+        print("New Degrees in Seconds: \(newTotalInSeconds)")
+        //Now calculate the difference in seconds
+        let secondsToAddOrSubtract = (newTotalInSeconds - originalDegreesInSeconds).rounded()
+        print("Delta between Original and New: \(secondsToAddOrSubtract) sec")
+        let degreesAfterUpdate = originalDegrees + secondsToAddOrSubtract/3600.0
+        return degreesAfterUpdate
+    }
+
     fileprivate func updateDegreesValueForRaymarineFormat() {
         let strDecimalMinutes = String(minutesForRaymarineView) + "." + String(minuteTenth) + String(minuteHundredth) + String(minuteThousandth)
         if let test = Double(strDecimalMinutes) {
@@ -782,7 +829,7 @@ struct DegreesEntryView: View {
             if !showDegreesPicker {
                 Text("\(degrees)")
                     .onTapGesture {
-                        toggleViewOfSelectedPicker(.Degrees, hideAll: false)
+                        togglePickerVisibility(.Degrees)
                     }
                 //.frame(width: 100, height: 35, alignment: .trailing)
             } else {
@@ -796,7 +843,7 @@ struct DegreesEntryView: View {
                     }
                 }
                 .onChange(of: degrees) {
-                    updateDegreesFromDMS()
+                    locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
             Text("\u{00B0}")
@@ -818,7 +865,7 @@ struct DegreesEntryView: View {
                     }
                 }
                 .onChange(of: minutesForDMSView) {
-                    updateDegreesFromDMS()
+                    locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
             Text("'")
@@ -840,7 +887,7 @@ struct DegreesEntryView: View {
                     }
                 }
                 .onChange(of: seconds) {
-                    updateDegreesFromDMS()
+                    locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
             Text("\"")

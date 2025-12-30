@@ -7,7 +7,17 @@
 
 /*
 TODO List:
- - Make sure that initial Location 1 is actual user location
+ - Show alert when user taps 'Hemisphere'
+ */
+
+/*
+Expected values (for changes in Latitude):
+ - Degrees | Decimal Minutes (Raymarine) View:
+    0.001 minutes = 0.001 nm
+ - Degrees | Minutes | Seconds (DMS) View:
+    1 second = 1/60 of 1 minute = 1/60 nm = 0.0166 nm
+ - Decimal Degrees View:
+    0.001 degrees = 1/1000 of 60nm = 0.06 nm
  */
 
 import SwiftUI

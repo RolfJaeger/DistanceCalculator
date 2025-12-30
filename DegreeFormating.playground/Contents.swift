@@ -76,6 +76,22 @@ fileprivate func updateDegreesFromDMS(degrees: Int, minutes: Int, seconds: Int) 
     return CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
 }
 
+fileprivate func updateDegreesFromDMS(originalDegrees: CLLocationDegrees, degrees: Int, minutes: Int, seconds: Int) -> CLLocationDegrees {
+    //First calculate the original degrees in seconds
+    let originalDegreesInSeconds = originalDegrees * 3600.0
+    print("Original Degrees in Seconds: \(originalDegreesInSeconds)")
+    //Now calculate the new degrees in seconds
+    let newDegreesInSeconds = Double(degrees) * 3600.0
+    let newMinutesInSeconds = Double(minutes) * 60.0
+    let newTotalInSeconds = newDegreesInSeconds + newMinutesInSeconds + Double(seconds)
+    print("New Degrees in Seconds: \(newTotalInSeconds)")
+    //Now calculate the difference in seconds
+    let secondsToAddOrSubtract = (newTotalInSeconds - originalDegreesInSeconds).rounded()
+    print("Delta between Original and New: \(secondsToAddOrSubtract) sec")
+    let degreesAfterUpdate = originalDegrees + secondsToAddOrSubtract/3600.0
+    return degreesAfterUpdate
+}
+
 fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
     var d = Int(degrees)
     var fractualMinutes = (degrees - Double(d)) * 60
@@ -93,47 +109,67 @@ fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
     return "\(d)\u{00B0} \(m)' \(s)\""
 }
 
-/*
-let degrees = 122
-let minutes = 20
-let seconds = 59
-
-var calculatedDegrees = updateDegreesFromDMS(degrees: degrees, minutes: minutes, seconds: seconds)
-var strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
-
-calculatedDegrees = 122.35
-strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
-*/
-
-/*
-var degrees: CLLocationDegrees = 54.799999
-let degreesRounded = Double(degrees).rounded(toPlaces: 3)
-let test = degrees.rounded()
-print(degreesRounded)
-let strDegrees = String(Int(degreesRounded)) + "."
-+ extractTenth(degrees: degrees)
-+ extractHundredth(degrees: degrees)
-+ extractThousandth(degrees: degrees)
-print(strDegrees)
-*/
-
-var degrees = 122
-let decimalDegrees = 122.34998333333333
-var decimalMinutes = (decimalDegrees - Double(degrees)) * 60
-if decimalMinutes == 60 {
-    degrees += 1
-    decimalMinutes = 0
-}
-let minutesInDecimalFormat = Double(decimalMinutes)
-var minutes = Int(decimalMinutes.rounded(toPlaces: 3))
-let decimalSeconds = Int(((minutesInDecimalFormat - Double(minutes))*60).rounded())
-var seconds = Int(decimalSeconds)
-if seconds == 60 {
-   minutes += 1
-   seconds = 0
+private func testRounding() {
+    var degrees: CLLocationDegrees = 54.799999
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let test = degrees.rounded()
+    print(degreesRounded)
+    let strDegrees = String(Int(degreesRounded)) + "."
+    + extractTenth(degrees: degrees)
+    + extractHundredth(degrees: degrees)
+    + extractThousandth(degrees: degrees)
+    print(strDegrees)
 }
 
-let strDMS = DegreesInDMS(degrees: decimalDegrees)
-print("In Distance View: \(strDMS)")
-let calculatedDMS = "\(degrees)\u{00B0} \(minutes)' \(seconds)\""
-print("In DegreesEntryView: \(calculatedDMS)")
+private func testInitiazation() {
+    var degrees = 122
+    let decimalDegrees = 122.34998333333333
+    var decimalMinutes = (decimalDegrees - Double(degrees)) * 60
+    if decimalMinutes == 60 {
+        degrees += 1
+        decimalMinutes = 0
+    }
+    let minutesInDecimalFormat = Double(decimalMinutes)
+    var minutes = Int(decimalMinutes.rounded(toPlaces: 3))
+    let decimalSeconds = Int(((minutesInDecimalFormat - Double(minutes))*60).rounded())
+    var seconds = Int(decimalSeconds)
+    if seconds == 60 {
+       minutes += 1
+       seconds = 0
+    }
+
+    let strDMS = DegreesInDMS(degrees: decimalDegrees)
+    print("In Distance View: \(strDMS)")
+    let calculatedDMS = "\(degrees)\u{00B0} \(minutes)' \(seconds)\""
+    print("In DegreesEntryView: \(calculatedDMS)")
+
+}
+
+private func testUpdateDegreesFromDMS() {
+    
+    let locDegrees = 37.912999999999997
+    let strLocDegrees = DegreesInDMS(degrees: locDegrees)
+    print("Initial Degrees: \(locDegrees)")
+    print("Initial DMS: \(strLocDegrees)")
+    
+    let initialPlusOneSecond = (locDegrees * 3600.0 + 1)/3600.0
+    print("Initial Degrees plus 1 second: \(initialPlusOneSecond)")
+    
+    let degrees = 37
+    let minutes = 54
+    var seconds = 48
+    
+    var calculatedDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutes, seconds: seconds)
+    print("Calculated Degrees: \(calculatedDegrees)")
+    var strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
+    print("In DMS Format: \(strDegreesInDMS)")
+    //Now subtract a second
+    seconds = 47
+    calculatedDegrees = updateDegreesFromDMS(originalDegrees: calculatedDegrees, degrees: degrees, minutes: minutes, seconds: seconds)
+    print("Degrees after subtracting 1 second: \(calculatedDegrees)")
+    let diff = locDegrees - calculatedDegrees
+    print("Difference: \(diff)")
+
+}
+
+testUpdateDegreesFromDMS()
