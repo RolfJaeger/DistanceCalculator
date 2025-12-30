@@ -1,0 +1,38 @@
+//
+//  Misc.swift
+//  MapPlayground
+//
+//  Created by Rolf Jaeger on 12/29/25.
+//
+
+import Foundation
+
+extension Double {
+    /// Rounds the double to decimal places value
+    func rounded(toPlaces places:Int) -> Double {
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
+    }
+}
+
+enum ViewName: String {
+    case Loc1Lat
+    case Loc1Long
+    case Loc2Lat
+    case Loc2Long
+}
+
+enum ViewFormat: String {
+    case DMS = "Degrees-Mins-Secs"
+    case DDM = "Decimal Degrees"
+    case Raymarine = "Raymarine"
+}
+
+enum PickerName: String {
+    case Degrees
+    case Minutes
+    case Tenth
+    case Hundredth
+    case Thousandth
+    case Seconds
+}

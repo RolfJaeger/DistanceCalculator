@@ -13,21 +13,6 @@ TODO List:
 import SwiftUI
 import CoreLocation
 
-extension Double {
-    /// Rounds the double to decimal places value
-    func rounded(toPlaces places:Int) -> Double {
-        let divisor = pow(10.0, Double(places))
-        return (self * divisor).rounded() / divisor
-    }
-}
-
-enum ViewName: String {
-    case Loc1Lat
-    case Loc1Long
-    case Loc2Lat
-    case Loc2Long
-}
-
 struct DistanceView: View {
     
     @ObservedObject var locationManager = LocationManager()
@@ -36,7 +21,7 @@ struct DistanceView: View {
     @Binding var longLoc1: CLLocationDegrees
     @Binding var latLoc2: CLLocationDegrees
     @Binding var longLoc2: CLLocationDegrees
-    
+        
     @State var viewFormat: ViewFormat
 
     @State var loc1LatViewVisible = false
@@ -154,17 +139,19 @@ struct DistanceView: View {
                     Text("Degrees | Decimal Minutes")
                 }
             }
-            Button(action: {
-                switch viewFormat {
-                case .DMS:
-                    viewFormat = .Raymarine
-                case .DDM:
-                    viewFormat = .DMS
-                case .Raymarine:
-                    viewFormat = .DDM
-                }
-            }, label: {Text(txtSwitchFormat)})
-            .buttonStyle(.bordered)
+            if !loc1LatViewVisible && !loc1LongViewVisible && !loc2LatViewVisible && !loc2LongViewVisible {
+                Button(action: {
+                    switch viewFormat {
+                    case .DMS:
+                        viewFormat = .Raymarine
+                    case .DDM:
+                        viewFormat = .DMS
+                    case .Raymarine:
+                        viewFormat = .DDM
+                    }
+                }, label: {Text(txtSwitchFormat)})
+                .buttonStyle(.bordered)
+            }
         }
     }
     
@@ -479,7 +466,7 @@ struct DistanceView: View {
         return "\(decimalDegrees)\u{00B0}"
     }
 
-    fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
+    fileprivate func DegreesInDMS_Rev0(degrees: CLLocationDegrees) -> String {
         var d = Int(degrees)
         var fractualMinutes = (degrees - Double(d)) * 60
         if fractualMinutes == 60 {
@@ -493,6 +480,23 @@ struct DistanceView: View {
             doubleSeconds = 0
         }
         let s = Int(doubleSeconds)
+        return "\(d)\u{00B0} \(m)' \(s)\""
+    }
+
+    fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
+        var d = Int(degrees)
+        var fractualMinutes = (degrees - Double(d)) * 60
+        if fractualMinutes == 60 {
+            d += 1
+            fractualMinutes = 0
+        }
+        var m = Int(fractualMinutes)
+        var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
+        if doubleSeconds == 60 {
+            m += 1
+            doubleSeconds = 0
+        }
+        let s = Int(doubleSeconds.rounded(toPlaces: 0))
         return "\(d)\u{00B0} \(m)' \(s)\""
     }
 
@@ -510,15 +514,10 @@ struct DistanceView: View {
     @Previewable @State var longaLoc1: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
     @Previewable @State var latLoc2: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
     @Previewable @State var longLoc2: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
-    
+
     var viewFormat: ViewFormat = .DDM
 
     return DistanceView(latLoc1: $latLoc1, longLoc1: $longLoc2, latLoc2: $latLoc2, longLoc2: $longLoc2, viewFormat: viewFormat)
 }
 
-extension View {
-    func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-}
 

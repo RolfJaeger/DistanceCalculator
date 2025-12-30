@@ -21,23 +21,6 @@ fileprivate func DecimalDegrees(degrees: CLLocationDegrees) -> String {
     return "\(decimalDegrees)"
 }
 
-fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
-    var d = Int(degrees)
-    var fractualMinutes = (degrees - Double(d)) * 60
-    if fractualMinutes == 60 {
-        d += 1
-        fractualMinutes = 0
-    }
-    var m = Int(fractualMinutes)
-    var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
-    if doubleSeconds == 60 {
-        m += 1
-        doubleSeconds = 0
-    }
-    let s = Int(doubleSeconds)
-    return "\(d)\u{00B0} \(m)' \(s)\""
-}
-
 fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
     let d = Int(degrees)
     let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
@@ -93,6 +76,23 @@ fileprivate func updateDegreesFromDMS(degrees: Int, minutes: Int, seconds: Int) 
     return CLLocationDegrees(Double(degrees) + decimalMinutes + decimalSeconds)
 }
 
+fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
+    var d = Int(degrees)
+    var fractualMinutes = (degrees - Double(d)) * 60
+    if fractualMinutes == 60 {
+        d += 1
+        fractualMinutes = 0
+    }
+    var m = Int(fractualMinutes)
+    var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
+    if doubleSeconds == 60 {
+        m += 1
+        doubleSeconds = 0
+    }
+    let s = Int(doubleSeconds)
+    return "\(d)\u{00B0} \(m)' \(s)\""
+}
+
 /*
 let degrees = 122
 let minutes = 20
@@ -105,6 +105,7 @@ calculatedDegrees = 122.35
 strDegreesInDMS = DegreesInDMS(degrees: calculatedDegrees)
 */
 
+/*
 var degrees: CLLocationDegrees = 54.799999
 let degreesRounded = Double(degrees).rounded(toPlaces: 3)
 let test = degrees.rounded()
@@ -114,4 +115,25 @@ let strDegrees = String(Int(degreesRounded)) + "."
 + extractHundredth(degrees: degrees)
 + extractThousandth(degrees: degrees)
 print(strDegrees)
+*/
 
+var degrees = 122
+let decimalDegrees = 122.34998333333333
+var decimalMinutes = (decimalDegrees - Double(degrees)) * 60
+if decimalMinutes == 60 {
+    degrees += 1
+    decimalMinutes = 0
+}
+let minutesInDecimalFormat = Double(decimalMinutes)
+var minutes = Int(decimalMinutes.rounded(toPlaces: 3))
+let decimalSeconds = Int(((minutesInDecimalFormat - Double(minutes))*60).rounded())
+var seconds = Int(decimalSeconds)
+if seconds == 60 {
+   minutes += 1
+   seconds = 0
+}
+
+let strDMS = DegreesInDMS(degrees: decimalDegrees)
+print("In Distance View: \(strDMS)")
+let calculatedDMS = "\(degrees)\u{00B0} \(minutes)' \(seconds)\""
+print("In DegreesEntryView: \(calculatedDMS)")
