@@ -45,7 +45,8 @@ struct DistanceView: View {
     @State var EastWestLoc2 = "E"
 
     @State var hintVisible = true
-    
+    @State private var showDialog = false
+
     var txtSwitchFormat: String {
         switch viewFormat {
         case .DMS:
@@ -58,67 +59,72 @@ struct DistanceView: View {
     }
     
     var body: some View {
-        VStack {
-            Text("Distance Calculator")
-                .font(.title)
-                .bold()
-                .padding()
-            FormatView
-                .padding(.bottom, 10)
-            Text("Distance")
-                .font(.title2)
-                .bold()
-                .padding(.bottom, 0)
-            DistanceView
-            Text("Location 1")
-                .font(.title2)
-                .bold()
-                .padding(.top, 10)
-                .padding(.bottom, 5)
-            Location1Details
-            Text("Location 2")
-                .font(.title2)
-                .bold()
-                .padding(.top, 10)
-                .padding(.bottom, 5)
-            Location2Details
-            
-            HintView
-            Spacer()
-        }
-        .onAppear {
-            if let userLocation = locationManager.lastKnownLocation {
-                latLoc1 = userLocation.latitude
-                latLoc1 = Double(latLoc1).rounded(toPlaces: 3)
-                if latLoc1 < 0 {
-                    latLoc1 = -latLoc1
-                    NortSouthLoc1 = "S"
-                }
-                longLoc1 = userLocation.longitude
-                longLoc1 = Double(longLoc1).rounded(toPlaces: 3)
-                if longLoc1 < 0 {
-                    longLoc1 = -longLoc1
+        ZStack {
+            VStack {
+                Text("Distance Calculator")
+                    .font(.title)
+                    .bold()
+                    .padding()
+                FormatView
+                    .padding(.bottom, 10)
+                Text("Distance")
+                    .font(.title2)
+                    .bold()
+                    .padding(.bottom, 0)
+                DistanceView
+                Text("Location 1")
+                    .font(.title2)
+                    .bold()
+                    .padding(.top, 10)
+                    .padding(.bottom, 5)
+                Location1Details
+                Text("Location 2")
+                    .font(.title2)
+                    .bold()
+                    .padding(.top, 10)
+                    .padding(.bottom, 5)
+                Location2Details
+                
+                HintView
+                Spacer()
+            }
+            .onAppear {
+                if let userLocation = locationManager.lastKnownLocation {
+                    latLoc1 = userLocation.latitude
+                    latLoc1 = Double(latLoc1).rounded(toPlaces: 3)
+                    if latLoc1 < 0 {
+                        latLoc1 = -latLoc1
+                        NortSouthLoc1 = "S"
+                    }
+                    longLoc1 = userLocation.longitude
+                    longLoc1 = Double(longLoc1).rounded(toPlaces: 3)
+                    if longLoc1 < 0 {
+                        longLoc1 = -longLoc1
+                        EastWestLoc1 = "W"
+                    }
+                    
+                    latLoc2 = latLoc1
+                    NortSouthLoc2 = NortSouthLoc1
+                    
+                    longLoc2 = longLoc1
+                    EastWestLoc2 = EastWestLoc1
+                    
+                } else {
+                    latLoc1 = 0.0
+                    NortSouthLoc1 = "N"
+                    longLoc1 = 0.0
                     EastWestLoc1 = "W"
+                    
+                    latLoc2 = 0.0
+                    NortSouthLoc1 = "N"
+                    longLoc2 = 0.0
+                    EastWestLoc1 = "W"
+                    
+                    hintVisible = false
                 }
-                
-                latLoc2 = latLoc1
-                NortSouthLoc2 = NortSouthLoc1
-                
-                longLoc2 = longLoc1
-                EastWestLoc2 = EastWestLoc1
-                
-            } else {
-                latLoc1 = 0.0
-                NortSouthLoc1 = "N"
-                longLoc1 = 0.0
-                EastWestLoc1 = "W"
-                
-                latLoc2 = 0.0
-                NortSouthLoc1 = "N"
-                longLoc2 = 0.0
-                EastWestLoc1 = "W"
-                
-                hintVisible = false
+            }
+            if showDialog {
+                UserDialog
             }
         }
     }
@@ -192,7 +198,7 @@ struct DistanceView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
+                    showDialog = true
                 }, label: {
                     Text("Hemisphere")
                 })
@@ -227,7 +233,7 @@ struct DistanceView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
+                    showDialog = true
                 }, label: {
                     Text("Hemisphere")
                 })
@@ -296,7 +302,7 @@ struct DistanceView: View {
         VStack {
             HStack {
                 Button(action: {
-                    NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
+                    showDialog = true
                 }, label: {
                     Text("Hemisphere")
                 })
@@ -324,7 +330,7 @@ struct DistanceView: View {
         VStack {
             HStack {
                 Button(action: {
-                    EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
+                    showDialog = true
                 }, label: {
                     Text("Hemisphere")
                 })
@@ -389,6 +395,64 @@ struct DistanceView: View {
             }
         }
     }
+    
+    private var UserDialog: some View {
+        VStack {
+            Text("Are you sure you want to switch hemisphere ?")
+                .font(.title)
+                .foregroundColor(.black)
+                .bold()
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 20) {
+                Button(action: {
+                    showDialog = false
+                    if loc1LatViewVisible {
+                        NortSouthLoc1 = (NortSouthLoc1 == "N") ? "S" : "N"
+                    }
+                    if loc2LatViewVisible {
+                        NortSouthLoc2 = (NortSouthLoc2 == "N") ? "S" : "N"
+                    }
+                    if loc1LongViewVisible {
+                        EastWestLoc1 = (EastWestLoc1 == "E") ? "W" : "E"
+                    }
+                    if loc2LongViewVisible {
+                        EastWestLoc2 = (EastWestLoc2 == "E") ? "W" : "E"
+                    }
+                }) {
+                    Text("Yes")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                Button(action: {
+                    // NO action
+                    showDialog = false
+                }) {
+                    Text("No")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                }
+
+            }
+        }
+        .padding()
+        .frame(maxWidth: 300)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+
+    }
+    
+
     
     fileprivate func SetViewVisibility(viewName: ViewName) {
         loc1LatViewVisible = false
@@ -516,7 +580,6 @@ struct DistanceView: View {
         return "\(d)\u{00B0} \(fractualMinutes)'"
     }
 
-    
 }
 
 #Preview {
