@@ -7,6 +7,15 @@
 
 import Foundation
 
+//*******************
+//Fonts for iPad only
+//*******************
+let titleFont: CGFloat = 60
+let subtitleFont: CGFloat = 30
+let buttonFont: CGFloat = 35
+let dataFont: CGFloat = 45
+let hintFont:CGFloat = 30
+
 extension Double {
     /// Rounds the double to decimal places value
     func rounded(toPlaces places:Int) -> Double {
@@ -20,6 +29,16 @@ enum ViewName: String {
     case Loc1Long
     case Loc2Lat
     case Loc2Long
+}
+
+enum PlusMinusTarget {
+    case DEGREES
+    case MINUTES
+    case SECONDS
+    case TENTH
+    case HUNDREDTH
+    case THOUSANDTH
+    case TENTHOUSANDTH
 }
 
 enum ViewFormat: String {
