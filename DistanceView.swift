@@ -355,7 +355,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 220)
+                .frame(height: 225)
         }
         //.containerRelativeFrame(.horizontal)
         .border(.primary, width: 2)
@@ -395,7 +395,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 220)
+                .frame(height: 225)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -511,7 +511,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 220)
+                .frame(height: 225)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -549,7 +549,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 220)
+                .frame(height: 225)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
