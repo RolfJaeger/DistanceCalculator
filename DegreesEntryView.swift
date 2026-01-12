@@ -22,9 +22,9 @@ This view supports the following formats:
 */
 
 struct DegreesEntryView: View {
-
+    
     @Environment(\.horizontalSizeClass) var sizeClass
-
+    
     var orientation: String
     var maxDegrees: Int
     
@@ -32,22 +32,22 @@ struct DegreesEntryView: View {
     @Binding var viewFormat: ViewFormat
     
     @State private var path = NavigationPath()
-
+    
     @State var cllDegrees: CLLocationDegrees
     @State private var degrees: Int = -180
     @State private var decimalDegrees: Double = -179.001
     @State private var minutesForRaymarineView: Int = 59
     @State private var minutesForDMSView: Int = 59
-
+    
     @State private var minutesInDecimalFormat:Double = 59.000
     @State private var degreeTenth: Int = 0
     @State private var degreeHundredth: Int = 0
     @State private var degreeThousandth: Int = 0
-
+    
     @State private var minuteTenth: Int = 0
     @State private var minuteHundredth: Int = 0
     @State private var minuteThousandth: Int = 0
-
+    
     @State private var seconds: Int = 45
     
     @State private var showDecimal = false
@@ -59,22 +59,23 @@ struct DegreesEntryView: View {
     @State private var showHundredthPicker = false
     @State private var showThousandthPicker = false
     @State private var showSecondsPicker = false
-
+    
     @State private var plusMinusTarget: PlusMinusTarget = .THOUSANDTH
     
     @State private var isDegreesEditable = false
     @State private var isMinutesEditable = false
+    @State private var isSecondsEditable = false
     @State private var isTenthEditable = false
     @State private var isHundredthEditable = false
     @State private var isThousandthEditable = true
     @State private var isTenThousandthEditable = false
-
+    
     @FocusState private var isDecimalDegreesFieldFocused: Bool
     @FocusState private var isDegreesFieldFocused: Bool
     @FocusState private var isDecimalMinutesFieldFocused: Bool
     @FocusState private var isMinutesFieldFocused: Bool
     @FocusState private var isSecondsFieldFocused: Bool
-
+    
     init(orientation: String, locDegrees: Binding<CLLocationDegrees>, viewFormat: Binding<ViewFormat>) {
         self.orientation = orientation
         if orientation == "N" || orientation == "S" {
@@ -82,7 +83,7 @@ struct DegreesEntryView: View {
         } else {
             maxDegrees = 180
         }
-            
+        
         
         _locDegrees = locDegrees // Initialize the @Binding
         _cllDegrees =  State(initialValue: locDegrees.wrappedValue)
@@ -91,7 +92,7 @@ struct DegreesEntryView: View {
         _viewFormat = viewFormat
         initializeDegreeValues()
     }
-
+    
     fileprivate mutating func initializeDegreeValues() {
         let fractionalDegrees = decimalDegrees - Double(degrees)
         let decimalMinutes = fractionalDegrees * 60
@@ -104,7 +105,7 @@ struct DegreesEntryView: View {
             _minutesForDMSView = State(initialValue: Int(decimalMinutes.rounded()))
             _seconds = State(initialValue: 0)
         }
-
+        
         if let tryTenth = Int(extractTenth(degrees: decimalDegrees)) {
             _degreeTenth = State(initialValue: Int(tryTenth))
         }
@@ -114,7 +115,7 @@ struct DegreesEntryView: View {
         if let tryThousandth = Int(extractThousandth(degrees: decimalDegrees)) {
             _degreeThousandth = State(initialValue: Int(tryThousandth))
         }
-
+        
         if let tryTenth = Int(extractTenth(degrees: minutesInDecimalFormat)) {
             _minuteTenth = State(initialValue: Int(tryTenth))
         }
@@ -133,7 +134,7 @@ struct DegreesEntryView: View {
         print("DegreeTenth: \(degreeTenth)")
         print("DegreeHundredth: \(degreeHundredth)")
         print("DegreeThousandth: \(degreeThousandth)")
-
+        
         print("")
         
         print("MinuteTenth: \(minuteTenth)")
@@ -158,7 +159,7 @@ struct DegreesEntryView: View {
             Spacer()
         }
     }
-
+    
     private var EntryView: some View {
         VStack {
             if sizeClass == .regular {
@@ -183,7 +184,7 @@ struct DegreesEntryView: View {
             Spacer()
         }
     }
-
+    
     fileprivate var DecimalDegrees_View: some View {
         VStack(alignment: .center) {
             if sizeClass == .regular {
@@ -205,7 +206,7 @@ struct DegreesEntryView: View {
         }
         .frame(maxWidth: .infinity)
     }
-
+    
     fileprivate var Instructions: some View {
         VStack {
             Text("Tap and scroll or select the position")
@@ -223,7 +224,7 @@ struct DegreesEntryView: View {
         }
         .font(.footnote)
     }
-
+    
     fileprivate var Instructions_iPad: some View {
         VStack {
             Text("Tap and scroll or select the position")
@@ -241,7 +242,7 @@ struct DegreesEntryView: View {
         }
         .font(Font.system(size: hintFont, weight: .regular, design: .default))
     }
-
+    
     fileprivate var DecimalDegrees_View_iPad: some View {
         VStack(alignment: .center) {
             VStack {
@@ -258,7 +259,7 @@ struct DegreesEntryView: View {
             
         }
     }
-
+    
     fileprivate var DecimalDegreesDetails: some View {
         HStack {
             if !showDegreesPicker {
@@ -456,7 +457,37 @@ struct DegreesEntryView: View {
         }
     }
     
-
+    fileprivate func SwitchEdibility(target: PlusMinusTarget) {
+        
+        togglePickerVisibility()
+        
+        isDegreesEditable = false
+        isMinutesEditable = false
+        isSecondsEditable = false
+        isTenthEditable = false
+        isHundredthEditable = false
+        isThousandthEditable = false
+        isTenThousandthEditable = false
+        
+        switch target {
+        case .DEGREES:
+            isDegreesEditable = true
+        case .MINUTES:
+            isMinutesEditable = true
+        case .SECONDS:
+            isSecondsEditable = true
+        case .TENTH:
+            isTenthEditable = true
+        case .HUNDREDTH:
+            isHundredthEditable = true
+        case .THOUSANDTH:
+            isThousandthEditable = true
+        case .TENTHOUSANDTH:
+            isTenThousandthEditable = true
+        }
+    }
+    
+    
     fileprivate var DecimalDegreesDetails_iPad: some View {
         HStack {
             if !showDegreesPicker {
@@ -476,12 +507,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = true
-                                    isTenthEditable = false
-                                    isHundredthEditable = false
-                                    isThousandthEditable = false
                                     plusMinusTarget = .DEGREES
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -504,7 +531,7 @@ struct DegreesEntryView: View {
                         .font(.system(size: 30, weight: .bold))
                 }
             }
-
+            
             VStack {
                 Text(".")
                     .padding(.leading, -10)
@@ -531,12 +558,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isTenthEditable = true
-                                    isHundredthEditable = false
-                                    isThousandthEditable = false
                                     plusMinusTarget = .TENTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -581,12 +604,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isTenthEditable = false
-                                    isHundredthEditable = true
-                                    isThousandthEditable = false
                                     plusMinusTarget = .HUNDREDTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -631,12 +650,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isTenthEditable = false
-                                    isHundredthEditable = false
-                                    isThousandthEditable = true
                                     plusMinusTarget = .THOUSANDTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -674,7 +689,7 @@ struct DegreesEntryView: View {
         .padding(.bottom,5)
     }
     
-
+    
     fileprivate func toggleViewOfSelectedPicker(_ pickerName: PickerName, hideAll: Bool) {
         
         showDegreesPicker = false
@@ -704,6 +719,7 @@ struct DegreesEntryView: View {
     fileprivate func togglePickerVisibility(_ selectedPicker: PickerName? = nil) {
         showDegreesPicker = false
         showMinutesPicker = false
+        showSecondsPicker = false
         showTenthPicker = false
         showHundredthPicker = false
         showThousandthPicker = false
@@ -713,6 +729,8 @@ struct DegreesEntryView: View {
                 showDegreesPicker.toggle()
             case .Minutes:
                 showMinutesPicker.toggle()
+            case .Seconds:
+                showSecondsPicker.toggle()
             case .Tenth:
                 showTenthPicker.toggle()
             case .Hundredth:
@@ -720,9 +738,10 @@ struct DegreesEntryView: View {
             case .Thousandth:
                 showThousandthPicker.toggle()
             default:
-                showSecondsPicker.toggle()
+                _ = true
             }
 
+            
         }
     }
     
@@ -899,12 +918,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = true
-                                    isTenthEditable = false
-                                    isHundredthEditable = false
-                                    isThousandthEditable = false
                                     plusMinusTarget = .DEGREES
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -954,13 +969,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isMinutesEditable = true
-                                    isTenthEditable = false
-                                    isHundredthEditable = false
-                                    isThousandthEditable = false
                                     plusMinusTarget = .MINUTES
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -991,7 +1001,7 @@ struct DegreesEntryView: View {
                 Text(" ")
                     .font(.system(size: 30, weight: .bold))
             }
-
+            
             if !showTenthPicker {
                 VStack {
                     Text("\(minuteTenth)")
@@ -1009,13 +1019,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isMinutesEditable = false
-                                    isTenthEditable = true
-                                    isHundredthEditable = false
-                                    isThousandthEditable = false
                                     plusMinusTarget = .TENTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -1057,13 +1062,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isMinutesEditable = false
-                                    isTenthEditable = false
-                                    isHundredthEditable = true
-                                    isThousandthEditable = false
                                     plusMinusTarget = .HUNDREDTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -1105,13 +1105,8 @@ struct DegreesEntryView: View {
                             Image(systemName: "applepencil.tip")
                                 .font(.system(size: 30, weight: .bold))
                                 .onTapGesture {
-                                    togglePickerVisibility()
-                                    isDegreesEditable = false
-                                    isMinutesEditable = false
-                                    isTenthEditable = false
-                                    isHundredthEditable = false
-                                    isThousandthEditable = true
                                     plusMinusTarget = .THOUSANDTH
+                                    SwitchEdibility(target: plusMinusTarget)
                                 }
                         }
                     }
@@ -1142,7 +1137,7 @@ struct DegreesEntryView: View {
                 Text(" ")
                     .font(.system(size: 30, weight: .bold))
             }
-
+            
         }
         .font(Font.system(size: 80, weight: .regular, design: .default))
         .padding(.top, 0)
@@ -1249,18 +1244,17 @@ struct DegreesEntryView: View {
             Button(action: {
                 PlusInDMSView()
             }, label: {
-                Text("+")
-                    .font(Font.system(size: buttonFont, weight: .regular, design: .default))
-                    .font(.title3)
+                Image(systemName: "plus.square")
+                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
-            .buttonStyle(.bordered)
+            //.buttonStyle(.bordered)
             Button(action: {
                 MinusInDMSView()
             }, label: {
-                Text("-")
-                    .font(Font.system(size: buttonFont, weight: .regular, design: .default))
+                Image(systemName: "minus.square")
+                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
-            .buttonStyle(.bordered)
+            //.buttonStyle(.bordered)
         }
     }
     
@@ -1286,10 +1280,10 @@ struct DegreesEntryView: View {
         }
         .frame(maxWidth: .infinity)
     }
-
+    
     fileprivate var DMS_View_iPad: some View {
         VStack(alignment: .center) {
-            HStack {
+            VStack {
                 DMSDetailsView_iPad
                 PlusMinusInDMSView_iPad
             }
@@ -1300,7 +1294,7 @@ struct DegreesEntryView: View {
         }
         .frame(maxWidth: .infinity)
     }
-
+    
     fileprivate var DMSDetailsView: some View {
         HStack {
             if !showDegreesPicker {
@@ -1374,74 +1368,151 @@ struct DegreesEntryView: View {
     fileprivate var DMSDetailsView_iPad: some View {
         HStack {
             if !showDegreesPicker {
-                Text("\(degrees)")
-                    .onTapGesture {
-                        togglePickerVisibility(.Degrees)
-                    }
-                //.frame(width: 100, height: 35, alignment: .trailing)
-            } else {
-                PickerViewWithoutIndicator(selection: $degrees) {
-                    ForEach(0...maxDegrees, id: \.self) { value in
-                        Text("\(value)")
-                            .tag(value)
-                            .frame(minWidth: 50.0)
-                            .font(.title)
-                            .bold()
+                VStack {
+                    Text("\(degrees)")
+                        .onTapGesture {
+                            togglePickerVisibility(.Degrees)
+                        }
+                    VStack {
+                        if isDegreesEditable {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    togglePickerVisibility()
+                                }
+                        } else {
+                            Image(systemName: "applepencil.tip")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    plusMinusTarget = .DEGREES
+                                    SwitchEdibility(target: plusMinusTarget)
+                                }
+                        }
                     }
                 }
+            } else {
+                Picker("", selection: $degrees) {
+                    ForEach(0...maxDegrees, id: \.self) { value in
+                        Text("\(value)")
+                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                    }
+                }
+                .pickerStyle(.wheel)
+                .scaleEffect(2.0)
+                .frame(width: 120, height: 100)
                 .onChange(of: degrees) {
                     locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
-            Text("\u{00B0}")
+            
+            VStack {
+                Text("\u{00B0}")
+                    .padding(.leading, -10)
+                    .padding(.bottom, 0)
+                Text(" ")
+                    .font(.system(size: 30, weight: .bold))
+            }
             
             if !showMinutesPicker {
-                Text("\(minutesForDMSView)")
-                //.frame(width: 100, height: 35, alignment: .trailing)
-                    .onTapGesture {
-                        toggleViewOfSelectedPicker(.Minutes, hideAll: false)
-                    }
-            } else {
-                PickerViewWithoutIndicator(selection: $minutesForDMSView) {
-                    ForEach(0...59, id: \.self) { value in
-                        Text("\(value)")
-                            .font(.title)
-                            .bold()
-                            .tag(value)
-                            .frame(minWidth: 250.0)
+                VStack {
+                    Text("\(minutesForDMSView)")
+                        .onTapGesture {
+                            togglePickerVisibility(.Minutes)
+                        }
+                    VStack {
+                        if isMinutesEditable {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    togglePickerVisibility()
+                                }
+                        } else {
+                            Image(systemName: "applepencil.tip")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    plusMinusTarget = .MINUTES
+                                    SwitchEdibility(target: plusMinusTarget)
+                                }
+                        }
                     }
                 }
+            } else {
+                Picker("", selection: $minutesForDMSView) {
+                    ForEach(0...59, id: \.self) { value in
+                        Text("\(value)")
+                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                    }
+                }
+                .pickerStyle(.wheel)
+                .scaleEffect(2.0)
+                .frame(width: 120, height: 100)
                 .onChange(of: minutesForDMSView) {
                     locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
-            Text("'")
+            
+            VStack {
+                Text("'")
+                    .padding(.leading, -10)
+                    .padding(.bottom, 0)
+                Text(" ")
+                    .font(.system(size: 30, weight: .bold))
+            }
             
             if !showSecondsPicker {
-                Text("\(seconds)")
-                //.frame(width: 100, height: 35, alignment: .trailing)
-                    .onTapGesture {
-                        toggleViewOfSelectedPicker(.Seconds, hideAll: false)
-                    }
-            } else {
-                PickerViewWithoutIndicator(selection: $seconds) {
-                    ForEach(0...59, id: \.self) { value in
-                        Text("\(value)")
-                            .font(.title)
-                            .bold()
-                            .tag(value)
-                            .frame(minWidth: 250.0)
+                VStack {
+                    Text("\(seconds)")
+                        .onTapGesture {
+                            togglePickerVisibility(.Seconds)
+                        }
+                    VStack {
+                        if isSecondsEditable {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    togglePickerVisibility()
+                                }
+                        } else {
+                            Image(systemName: "applepencil.tip")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    plusMinusTarget = .SECONDS
+                                    SwitchEdibility(target: plusMinusTarget)
+                                }
+                        }
                     }
                 }
+            } else {
+                Picker("", selection: $seconds) {
+                    ForEach(0...59, id: \.self) { value in
+                        Text("\(value)")
+                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                    }
+                }
+                .pickerStyle(.wheel)
+                .scaleEffect(2.0)
+                .frame(width: 120, height: 100)
+                
                 .onChange(of: seconds) {
                     locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
                 }
             }
-            Text("\"")
+            
+            VStack {
+                Text("\"")
+                    .padding(.leading, -10)
+                    .padding(.bottom, 0)
+                Text(" ")
+                    .font(.system(size: 30, weight: .bold))
+            }
+            
         }
+        .font(Font.system(size: 80, weight: .regular, design: .default))
+        .padding(.top, 0)
+        .padding(.bottom,5)
     }
-
-
+    
+    
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView, seconds: seconds)
         locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
@@ -1474,7 +1545,7 @@ struct DegreesEntryView: View {
         let degreesAfterUpdate = originalDegrees + secondsToAddOrSubtract/3600.0
         return degreesAfterUpdate
     }
-
+    
     fileprivate func updateDegreesValueForRaymarineFormat() {
         let strDecimalMinutes = String(minutesForRaymarineView) + "." + String(minuteTenth) + String(minuteHundredth) + String(minuteThousandth)
         if let test = Double(strDecimalMinutes) {
@@ -1490,7 +1561,7 @@ struct DegreesEntryView: View {
             decimalDegrees = locDegrees
         }
     }
-
+    
     fileprivate func updateDegreesValueDecimalDegreesFormat() {
         let degrees = Int(decimalDegrees)
         let strDecimalDegrees = String(degrees) + "." + String(degreeTenth) + String(degreeHundredth) + String(degreeThousandth)
@@ -1499,7 +1570,7 @@ struct DegreesEntryView: View {
             decimalDegrees = locDegrees
         }
     }
-
+    
     fileprivate func CalcMinutesAndSecondsFromDecimalDegrees(degrees: Double) {
         let intDegrees = Int(degrees)
         let fractionalMinutes = (degrees - Double(intDegrees)) * 60
@@ -1510,7 +1581,7 @@ struct DegreesEntryView: View {
         seconds = intSeconds
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView, seconds: seconds)
     }
-
+    
     fileprivate func ConvertDegreesStringToCLLocationDegrees(degrees: String) -> CLLocationDegrees {
         return CLLocationDegrees(floatLiteral: 89.0)
     }
@@ -1520,7 +1591,7 @@ struct DegreesEntryView: View {
         decimalDegrees = Double(degrees) + decimalMinutes/60
         return CLLocationDegrees(decimalDegrees)
     }
-
+    
     fileprivate func CalculateIntMinutesFromDecimalMinutes(strMinutesInDecimalFormat: String) -> String {
         
         guard let fltMinute = Float(strMinutesInDecimalFormat) else {
@@ -1529,7 +1600,7 @@ struct DegreesEntryView: View {
         let intMinute = Int(fltMinute)
         return String(intMinute)
     }
-
+    
     fileprivate func CalculateIntSecondsFromDecimalMinutes(minutesInDecimalFormat: Double) -> Int {
         
         let intMinute = Int(minutesInDecimalFormat)
@@ -1541,58 +1612,7 @@ struct DegreesEntryView: View {
         let totalSeconds = minutes * 60 + seconds
         return Double(totalSeconds)/60.0
     }
-
-    fileprivate func PlusInRaymarineView_Rev0() {
-        togglePickerVisibility()
-        if minuteThousandth < 9 {
-            minuteThousandth += 1
-        }
-        else {
-            let fractionalMinute = Int(String("\(minuteTenth)\(minuteHundredth)\(minuteThousandth)"))
-            if fractionalMinute == 999 {
-                if minutesForRaymarineView < 59 {
-                    minutesForRaymarineView += 1
-                    minutesInDecimalFormat += 1
-                } else {
-                    if degrees < maxDegrees - 1 {
-                        degrees += 1
-                        minutesForRaymarineView = 0
-                        minutesInDecimalFormat = 0.0
-                    }
-                }
-                minuteThousandth = 0
-                minuteHundredth = 0
-                minuteTenth = 0
-            } else {
-                if minuteHundredth < 9 {
-                    minuteHundredth += 1
-                    minuteThousandth = 0
-                } else {
-                    if minuteTenth < 9 {
-                        minuteTenth += 1
-                        minuteHundredth = 0
-                    } else {
-                        if minutesForRaymarineView < 59 {
-                            minutesForRaymarineView += 1
-                            minutesInDecimalFormat += 1
-                            minuteTenth = 0
-                        } else {
-                            if degrees < maxDegrees - 1 {
-                                degrees += 1
-                                minutesInDecimalFormat = 0.0
-                                minuteTenth = 0
-                                minuteHundredth = 0
-                                minuteThousandth = 0
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-        updateDegreesValueForRaymarineFormat()
-    }
-
+    
     fileprivate func PlusInRaymarineView() {
         
         togglePickerVisibility()
@@ -1652,7 +1672,7 @@ struct DegreesEntryView: View {
                             }
                         }
                     }
-
+                    
                 }
             }
         case .TENTHOUSANDTH:
@@ -1661,7 +1681,7 @@ struct DegreesEntryView: View {
         
         updateDegreesValueForRaymarineFormat()
     }
-
+    
     fileprivate func MinusInRaymarineView() {
         
         togglePickerVisibility()
@@ -1684,7 +1704,7 @@ struct DegreesEntryView: View {
         }
         updateDegreesValueForRaymarineFormat()
     }
-
+    
     fileprivate func PlusInDecimalDegreeView() {
         
         togglePickerVisibility()
@@ -1695,9 +1715,9 @@ struct DegreesEntryView: View {
                 decimalDegrees += 1
             }
         case .MINUTES:
-            var dummy = 0
+            _ = true
         case .SECONDS:
-            var dummy = 0
+            _ = true
         case .TENTH:
             if degreeTenth  < 9 {
                 degreeTenth += 1
@@ -1737,16 +1757,16 @@ struct DegreesEntryView: View {
                             }
                         }
                     }
-
+                    
                 }
             }
-
+            
         case .TENTHOUSANDTH:
-            var dummy = 0
+            _ = true
         }
         updateDegreesValueDecimalDegreesFormat()
     }
-
+    
     fileprivate func MinusInDecimalDegreeView() {
         togglePickerVisibility()
         
@@ -1776,28 +1796,66 @@ struct DegreesEntryView: View {
         }
         updateDegreesValueDecimalDegreesFormat()
     }
-
+    
     fileprivate func PlusInDMSView() {
+        
         togglePickerVisibility()
-        if seconds < 59 {
-            seconds += 1
-        } else {
-             if minutesForDMSView < 59 {
-                 minutesForDMSView += 1
-                 seconds = 0
-             } else {
-                 if degrees < maxDegrees - 1 {
-                     degrees += 1
-                     minutesForDMSView = 0
-                     seconds = 0
-                 }
-             }
+        
+        switch plusMinusTarget {
+        case .DEGREES:
+            if degrees < maxDegrees - 1 {
+                degrees += 1
+            }
+        case .MINUTES:
+            if minutesForDMSView < 59 { minutesForDMSView += 1 }
+        case .SECONDS:
+            if seconds < 59 {
+                seconds += 1
+            } else {
+                if minutesForDMSView < 59 {
+                    minutesForDMSView += 1
+                    seconds = 0
+                } else {
+                    if degrees < maxDegrees - 1 {
+                        degrees += 1
+                        minutesForDMSView = 0
+                        seconds = 0
+                    }
+                }
+            }
+        case .TENTH:
+            _ = true
+        case .HUNDREDTH:
+            _ = true
+        case .THOUSANDTH:
+            _ = true
+        case .TENTHOUSANDTH:
+            _ = true
         }
         locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
     }
-    
+
     fileprivate func MinusInDMSView() {
+        
         togglePickerVisibility()
+        
+        switch plusMinusTarget {
+        case .DEGREES:
+            if degrees > 0 { degrees -= 1 }
+        case .MINUTES:
+            if minutesForDMSView > 0 { minutesForDMSView -= 1 }
+        case .SECONDS:
+            if seconds > 0 { seconds -= 1 }
+        case .TENTH:
+            _ = true
+        case .HUNDREDTH:
+            _ = true
+        case .THOUSANDTH:
+            _ = true
+        case .TENTHOUSANDTH:
+            _ = true
+        }
+        
         if seconds >= 1 {
             seconds -= 1
         } else {
@@ -1814,6 +1872,8 @@ struct DegreesEntryView: View {
         }
         locDegrees = updateDegreesFromDMS(originalDegrees: locDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
     }
+
+    
 }
 
 fileprivate func extractTenth(degrees: CLLocationDegrees) -> String {
@@ -1890,7 +1950,7 @@ struct PickerViewWithoutIndicator_iPad<Content: View, Selection: Hashable>: View
 }
 
 #Preview {
-    @Previewable @State var viewFormat: ViewFormat = .Raymarine
+    @Previewable @State var viewFormat: ViewFormat = .DMS
     @Previewable @State var tmp = CLLocationDegrees(floatLiteral: 37.5899)
     @Previewable @State var orientation: String = "N"
     
