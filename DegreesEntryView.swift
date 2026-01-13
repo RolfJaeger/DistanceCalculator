@@ -43,7 +43,8 @@ struct DegreesEntryView: View {
     @State private var degreeTenth: Int = 0
     @State private var degreeHundredth: Int = 0
     @State private var degreeThousandth: Int = 0
-    
+    @State private var degreeTenThousandth: Int = 0
+
     @State private var minuteTenth: Int = 0
     @State private var minuteHundredth: Int = 0
     @State private var minuteThousandth: Int = 0
@@ -55,20 +56,21 @@ struct DegreesEntryView: View {
     
     @State private var showDegreesPicker = false
     @State private var showMinutesPicker = false
+    @State private var showSecondsPicker = false
     @State private var showTenthPicker = false
     @State private var showHundredthPicker = false
     @State private var showThousandthPicker = false
-    @State private var showSecondsPicker = false
-    
-    @State private var plusMinusTarget: PlusMinusTarget = .THOUSANDTH
+    @State private var showTenThousandthPicker = false
+
+    @State private var plusMinusTarget: PlusMinusTarget = .TENTHOUSANDTH
     
     @State private var isDegreesEditable = false
     @State private var isMinutesEditable = false
     @State private var isSecondsEditable = false
     @State private var isTenthEditable = false
     @State private var isHundredthEditable = false
-    @State private var isThousandthEditable = true
-    @State private var isTenThousandthEditable = false
+    @State private var isThousandthEditable = false
+    @State private var isTenThousandthEditable = true
     
     @FocusState private var isDecimalDegreesFieldFocused: Bool
     @FocusState private var isDegreesFieldFocused: Bool
@@ -114,6 +116,10 @@ struct DegreesEntryView: View {
         }
         if let tryThousandth = Int(extractThousandth(degrees: decimalDegrees)) {
             _degreeThousandth = State(initialValue: Int(tryThousandth))
+        }
+        
+        if let tryTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees)) {
+            _degreeTenThousandth = State(initialValue: Int(tryTenThousandth))
         }
         
         if let tryTenth = Int(extractTenth(degrees: minutesInDecimalFormat)) {
@@ -435,6 +441,48 @@ struct DegreesEntryView: View {
                 }
             }
 
+            if !showTenThousandthPicker {
+                VStack {
+                    Text("\(degreeTenThousandth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.TenThousandth)
+                        }
+                    VStack {
+                        if isTenThousandthEditable {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.system(size: 20, weight: .bold))
+                                .onTapGesture {
+                                    togglePickerVisibility()
+                                }
+                        } else {
+                            Image(systemName: "applepencil.tip")
+                                .font(.system(size: 25, weight: .bold))
+                                .onTapGesture {
+                                    plusMinusTarget = .TENTHOUSANDTH
+                                    SwitchEdibility(target: plusMinusTarget)
+                                }
+                        }
+                    }
+                }
+            } else {
+                Picker("", selection: $degreeTenThousandth) {
+                    ForEach(0...9, id: \.self) { value in
+                        Text("\(value)")
+                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                    }
+                }
+                .pickerStyle(.wheel)
+                .scaleEffect(1.0)
+                .frame(width: 40, height: 90)
+                .onAppear {
+                    degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
+                }
+                .onChange(of: degreeTenThousandth) {
+                    updateDegreesValueDecimalDegreesFormat()
+                }
+            }
+
             VStack {
                 Text("°")
                     .padding(.leading, -10)
@@ -664,6 +712,52 @@ struct DegreesEntryView: View {
                         degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
                     }
                     .onChange(of: degreeThousandth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
+                }
+            }
+            
+            if !showTenThousandthPicker {
+                VStack {
+                    Text("\(degreeTenThousandth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.Thousandth)
+                        }
+                    VStack {
+                        if isTenThousandthEditable {
+                            Image(systemName: "pencil.and.outline")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    togglePickerVisibility()
+                                }
+                        } else {
+                            Image(systemName: "applepencil.tip")
+                                .font(.system(size: 30, weight: .bold))
+                                .onTapGesture {
+                                    plusMinusTarget = .TENTHOUSANDTH
+                                    SwitchEdibility(target: plusMinusTarget)
+                                }
+                        }
+                    }
+                }
+            } else {
+                VStack {
+                    Picker("", selection: $degreeTenThousandth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeTenThousandth) {
                         updateDegreesValueDecimalDegreesFormat()
                     }
                     Text(" ")
@@ -1632,7 +1726,8 @@ struct DegreesEntryView: View {
     
     fileprivate func updateDegreesValueDecimalDegreesFormat() {
         let degrees = Int(decimalDegrees)
-        let strDecimalDegrees = String(degrees) + "." + String(degreeTenth) + String(degreeHundredth) + String(degreeThousandth)
+        let strDecimalDegrees = String(degrees) + "." + String(degreeTenth) + String(degreeHundredth) + String(degreeThousandth) +
+            String(degreeTenThousandth)
         if let test = Double(strDecimalDegrees) {
             locDegrees = test
             decimalDegrees = locDegrees
@@ -1773,7 +1868,8 @@ struct DegreesEntryView: View {
         updateDegreesValueForRaymarineFormat()
     }
     
-    fileprivate func PlusInDecimalDegreeView() {
+    
+    fileprivate func PlusInDecimalDegreeView_Rev0() {
         
         togglePickerVisibility()
         
@@ -1834,8 +1930,81 @@ struct DegreesEntryView: View {
         }
         updateDegreesValueDecimalDegreesFormat()
     }
+
+    fileprivate func PlusInDecimalDegreeView() {
+        
+        togglePickerVisibility()
+        
+        switch plusMinusTarget {
+        case .DEGREES:
+            if degrees < maxDegrees - 1 {
+                decimalDegrees += 1
+            }
+        case .MINUTES:
+            _ = true
+        case .SECONDS:
+            _ = true
+        case .TENTH:
+            if degreeTenth  < 9 {
+                degreeTenth += 1
+            }
+        case .HUNDREDTH:
+            if degreeHundredth < 9 {
+                degreeHundredth += 1
+            }
+        case .THOUSANDTH:
+            if degreeThousandth < 9 {
+                degreeThousandth += 1
+            }
+        case .TENTHOUSANDTH:
+            if degreeTenThousandth < 9 {
+                degreeTenThousandth += 1
+            }
+            else {
+                let fractionalMinute = Int(String("\(degreeTenth)\(degreeHundredth)\(degreeThousandth)\(degreeTenThousandth)"))
+                if fractionalMinute == 9999 {
+                    if Int(decimalDegrees.rounded()) < maxDegrees {
+                        decimalDegrees += 1
+                    }
+                    degreeTenth = 0
+                    degreeHundredth = 0
+                    degreeThousandth = 0
+                    degreeTenThousandth = 0
+                } else {
+                    if degreeThousandth < 9 {
+                        degreeThousandth += 1
+                        degreeTenThousandth = 0
+                    }
+                    else {
+                        if degreeHundredth < 9 {
+                            degreeHundredth += 1
+                            degreeThousandth = 0
+                            degreeTenThousandth = 0
+                        } else {
+                            if degreeTenth < 9 {
+                                degreeTenth += 1
+                                degreeHundredth = 0
+                                degreeThousandth = 0
+                                degreeTenThousandth = 0
+                            } else {
+                                if Int(decimalDegrees.rounded()) < maxDegrees - 1 {
+                                    decimalDegrees += 1
+                                    degreeTenth = 0
+                                    degreeHundredth = 0
+                                    degreeThousandth = 0
+                                    degreeTenThousandth = 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        updateDegreesValueDecimalDegreesFormat()
+    }
     
-    fileprivate func MinusInDecimalDegreeView() {
+
+    fileprivate func MinusInDecimalDegreeView_Rev0() {
         togglePickerVisibility()
         
         switch plusMinusTarget {
@@ -1864,7 +2033,67 @@ struct DegreesEntryView: View {
         }
         updateDegreesValueDecimalDegreesFormat()
     }
-    
+
+    fileprivate func MinusInDecimalDegreeView() {
+        
+        togglePickerVisibility()
+        
+        switch plusMinusTarget {
+        case .DEGREES:
+            if degrees > 0 {
+                decimalDegrees -= 1
+            }
+        case .MINUTES:
+            var dummy = 0
+        case .SECONDS:
+            _ = true
+        case .TENTH:
+            if degreeTenth  > 0 {
+                degreeTenth -= 1
+            }
+        case .HUNDREDTH:
+            if degreeHundredth > 0 {
+                degreeHundredth -= 1
+            }
+        case .THOUSANDTH:
+            if degreeThousandth > 0 {
+                degreeThousandth -= 1
+            }
+        case .TENTHOUSANDTH:
+            if degreeTenThousandth > 0 {
+                degreeTenThousandth -= 1
+            } else {
+                if degreeThousandth > 0 {
+                    degreeThousandth -= 1
+                    degreeTenThousandth = 9
+                } else {
+                    if degreeHundredth > 0 {
+                        degreeHundredth -= 1
+                        degreeThousandth = 9
+                        degreeTenThousandth = 9
+                    } else {
+                        if degreeTenth > 0 {
+                            degreeTenth -= 1
+                            degreeHundredth = 9
+                            degreeThousandth = 9
+                            degreeTenThousandth = 9
+                        } else {
+                            if degrees > 0 {
+                                decimalDegrees -= 1
+                                degreeTenth = 9
+                                degreeHundredth = 9
+                                degreeThousandth = 9
+                                degreeTenThousandth = 9
+                            }
+                        }
+                    }
+                }
+                    
+            }
+        }
+        updateDegreesValueDecimalDegreesFormat()
+    }
+
     fileprivate func PlusInDMSView() {
         
         togglePickerVisibility()
@@ -1987,6 +2216,19 @@ fileprivate func extractThousandth(degrees: CLLocationDegrees) -> String {
     }
 }
 
+fileprivate func extractTenThousandth(degrees: CLLocationDegrees) -> String {
+    let degreesRounded = Double(degrees).rounded(toPlaces: 4)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 4 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let tenthousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 4, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[tenthousandsIndex!])
+    } else {
+        return "0"
+    }
+}
 
 /// Helpers
 struct PickerViewWithoutIndicator<Content: View, Selection: Hashable>: View {

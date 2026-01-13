@@ -53,5 +53,6 @@ enum PickerName: String {
     case Tenth
     case Hundredth
     case Thousandth
+    case TenThousandth
     case Seconds
 }

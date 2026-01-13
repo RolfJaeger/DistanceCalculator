@@ -172,4 +172,26 @@ private func testUpdateDegreesFromDMS() {
 
 }
 
-testUpdateDegreesFromDMS()
+func testTenThousandth() {
+    let degrees = 120.58935
+    let tenthousandth = extractTenThousandth(degrees: degrees)
+    print(tenthousandth)
+}
+
+fileprivate func extractTenThousandth(degrees: CLLocationDegrees) -> String {
+    let degreesRounded = Double(degrees).rounded(toPlaces: 4)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 4 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let tenthousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 4, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[tenthousandsIndex!])
+    } else {
+        return "0"
+    }
+}
+
+
+//testUpdateDegreesFromDMS()
+testTenThousandth()

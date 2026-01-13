@@ -256,7 +256,7 @@ struct DistanceView: View {
                     }
                 }, label: {
                     Text(txtSwitchFormat)
-                        .font(Font.system(size: buttonFont, weight: .regular, design: .default))
+                        .font(Font.system(size: buttonFont - 10.0, weight: .regular, design: .default))
                 })
                 .buttonStyle(.bordered)
             }
@@ -800,7 +800,7 @@ struct DistanceView: View {
     }
     
     fileprivate func DecimalDegrees(degrees: CLLocationDegrees) -> String {
-        let decimalDegrees = Double(degrees).rounded(toPlaces: 3)
+        let decimalDegrees = Double(degrees).rounded(toPlaces: 4)
         return "\(decimalDegrees)\u{00B0}"
     }
 
