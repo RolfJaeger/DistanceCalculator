@@ -31,6 +31,8 @@ struct DegreesEntryView: View {
     @Binding var locDegrees: CLLocationDegrees
     @Binding var viewFormat: ViewFormat
     
+    @State private var plusMinusTarget: PlusMinusTarget = .TENTHOUSANDTH
+
     @State private var path = NavigationPath()
     
     @State var cllDegrees: CLLocationDegrees
@@ -61,8 +63,6 @@ struct DegreesEntryView: View {
     @State private var showHundredthPicker = false
     @State private var showThousandthPicker = false
     @State private var showTenThousandthPicker = false
-
-    @State private var plusMinusTarget: PlusMinusTarget = .TENTHOUSANDTH
     
     @State private var isDegreesEditable = false
     @State private var isMinutesEditable = false
@@ -152,7 +152,14 @@ struct DegreesEntryView: View {
             EntryView
         }
         .onAppear() {
-            //initializeDegreeValues()
+            switch viewFormat {
+            case .DMS:
+                plusMinusTarget = .SECONDS
+            case .DDM:
+                plusMinusTarget = .TENTHOUSANDTH
+            case .Raymarine:
+                plusMinusTarget = .THOUSANDTH
+            }
         }
         .ignoresSafeArea(.keyboard)
     }
