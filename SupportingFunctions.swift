@@ -42,12 +42,27 @@ enum PlusMinusTarget {
     case TENTHOUSANDTH
 }
 
+enum DecimalDegrees_PlusMinusTarget {
+    case DEGREES
+    case TENTH
+    case HUNDREDTH
+    case THOUSANDTH
+    case TENTHOUSANDTH
+}
+
+enum Raymarine_PlusMinusTarget {
+    case DEGREES
+    case MINUTES
+    case TENTH
+    case HUNDREDTH
+    case THOUSANDTH
+}
+
 enum DMS_PlusMinusTarget {
     case DEGREES
     case MINUTES
     case SECONDS
 }
-
 
 enum ViewFormat: String {
     case DMS = "Degrees-Mins-Secs"
@@ -65,10 +80,26 @@ enum PickerName: String {
     case Seconds
 }
 
+enum DecimalDegrees_PickerName: String {
+    case Degrees
+    case Tenth
+    case Hundredth
+    case Thousandth
+    case TenThousandth
+}
+
+
 enum DMS_PickerName: String {
     case Degrees
     case Minutes
     case Seconds
 }
 
+enum Raymarine_PickerName: String {
+    case Degrees
+    case Minutes
+    case Tenth
+    case Hundredth
+    case Thousandth
+}
 

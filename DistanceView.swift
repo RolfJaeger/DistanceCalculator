@@ -356,13 +356,13 @@ struct DistanceView: View {
             .font(.title)
             switch viewFormat {
             case .DMS:
-                DMSEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
                     .frame(height: 180)
             case .DDM:
-                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
                     .frame(height: 180)
             case .Raymarine:
-                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
                     .frame(height: 180)
             }
         }
@@ -381,8 +381,17 @@ struct DistanceView: View {
                 Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
                 Spacer()
             }
-            DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 280)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                    .frame(height: 280)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                    .frame(height: 280)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                    .frame(height: 280)
+            }
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -403,8 +412,17 @@ struct DistanceView: View {
                 Spacer()
             }
             .font(.title)
-            DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 180)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 180)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 180)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 180)
+            }
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -423,8 +441,17 @@ struct DistanceView: View {
                     }
                 Spacer()
             }
-            DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 280)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 280)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 280)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                    .frame(height: 280)
+            }
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -519,8 +546,17 @@ struct DistanceView: View {
                     }
             }
             .font(.title)
-            DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 180)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 180)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 180)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 180)
+            }
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -537,8 +573,17 @@ struct DistanceView: View {
                         loc2LatViewVisible = false
                     }
             }
-            DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 280)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 280)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 280)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                    .frame(height: 280)
+            }
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -557,8 +602,17 @@ struct DistanceView: View {
                     }
             }
             .font(.title)
-            DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 180)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 180)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 180)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 180)
+            }
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -575,8 +629,17 @@ struct DistanceView: View {
                         loc2LongViewVisible = false
                     }
             }
-            DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 280)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 280)
+            case .DDM:
+                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 280)
+            case .Raymarine:
+                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                    .frame(height: 280)
+            }
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
