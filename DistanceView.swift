@@ -355,7 +355,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 225)
+                .frame(height: 180)
         }
         //.containerRelativeFrame(.horizontal)
         .border(.primary, width: 2)
@@ -373,7 +373,7 @@ struct DistanceView: View {
                 Spacer()
             }
             DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 320)
+                .frame(height: 280)
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -395,7 +395,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 225)
+                .frame(height: 180)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -415,7 +415,7 @@ struct DistanceView: View {
                 Spacer()
             }
             DegreesEntryView(orientation: EastWestLoc1, locDegrees: $longLoc1, viewFormat: $viewFormat)
-                .frame(height: 320)
+                .frame(height: 280)
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -511,7 +511,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 225)
+                .frame(height: 180)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -529,7 +529,7 @@ struct DistanceView: View {
                     }
             }
             DegreesEntryView(orientation: NortSouthLoc2, locDegrees: $latLoc2, viewFormat: $viewFormat)
-                .frame(height: 320)
+                .frame(height: 280)
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -549,7 +549,7 @@ struct DistanceView: View {
             }
             .font(.title)
             DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 225)
+                .frame(height: 180)
         }
         .border(.primary, width: 2)
         .padding(.leading, 5)
@@ -567,7 +567,7 @@ struct DistanceView: View {
                     }
             }
             DegreesEntryView(orientation: EastWestLoc2, locDegrees: $longLoc2, viewFormat: $viewFormat)
-                .frame(height: 320)
+                .frame(height: 280)
         }
         .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
@@ -759,6 +759,7 @@ struct DistanceView: View {
         return strDistance
     }
     
+    /*
     fileprivate func LatLongToString(lat: CLLocationDegrees, long: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strLat = lat >= 0.0 ? "N" : "S"
         switch viewFormat {
@@ -781,7 +782,8 @@ struct DistanceView: View {
         let strLatLong = strLat + " | " + strLong
         return strLatLong
     }
-
+    */
+    
     fileprivate func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strDegrees: String
         switch viewFormat {
