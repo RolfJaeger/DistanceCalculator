@@ -354,8 +354,17 @@ struct DistanceView: View {
                 Spacer()
             }
             .font(.title)
-            DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
-                .frame(height: 180)
+            switch viewFormat {
+            case .DMS:
+                DMSEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                    .frame(height: 180)
+            case .DDM:
+                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                    .frame(height: 180)
+            case .Raymarine:
+                DegreesEntryView(orientation: NortSouthLoc1, locDegrees: $latLoc1, viewFormat: $viewFormat)
+                    .frame(height: 180)
+            }
         }
         //.containerRelativeFrame(.horizontal)
         .border(.primary, width: 2)

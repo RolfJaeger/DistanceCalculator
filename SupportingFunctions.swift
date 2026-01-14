@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 //*******************
 //Fonts for iPad only
@@ -41,6 +42,13 @@ enum PlusMinusTarget {
     case TENTHOUSANDTH
 }
 
+enum DMS_PlusMinusTarget {
+    case DEGREES
+    case MINUTES
+    case SECONDS
+}
+
+
 enum ViewFormat: String {
     case DMS = "Degrees-Mins-Secs"
     case DDM = "Decimal Degrees"
@@ -56,3 +64,11 @@ enum PickerName: String {
     case TenThousandth
     case Seconds
 }
+
+enum DMS_PickerName: String {
+    case Degrees
+    case Minutes
+    case Seconds
+}
+
+
