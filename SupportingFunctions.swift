@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import CoreLocation
 
 //*******************
 //Fonts for iPad only
@@ -24,6 +25,13 @@ extension Double {
         return (self * divisor).rounded() / divisor
     }
 }
+
+struct Location: Identifiable {
+    let id = UUID()
+    var coordinate: CLLocationCoordinate2D
+    var name: String
+}
+
 
 enum ViewName: String {
     case Loc1Lat

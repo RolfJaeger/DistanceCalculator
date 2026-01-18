@@ -29,10 +29,9 @@ struct DistanceView: View {
 
     @ObservedObject var locationManager = LocationManager()
     
-    @Binding var latLoc1: CLLocationDegrees
-    @Binding var longLoc1: CLLocationDegrees
-    @Binding var latLoc2: CLLocationDegrees
-    @Binding var longLoc2: CLLocationDegrees
+    //@Binding var Location1: Location
+    @State var Location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0), name: "Location 1")
+    @State var Location2 = Location(coordinate: CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0), name: "Location 2")
         
     @State var viewFormat: ViewFormat
 
@@ -41,7 +40,7 @@ struct DistanceView: View {
     @State var loc2LatViewVisible = false
     @State var loc2LongViewVisible = false
 
-    @State var NortSouthLoc1 = "N"
+    @State var NortSouthLoc1 = "S"
     @State var EastWestLoc1 = "E"
     @State var NortSouthLoc2 = "N"
     @State var EastWestLoc2 = "E"
@@ -60,52 +59,60 @@ struct DistanceView: View {
         }
     }
     
+    init(viewFormat: ViewFormat) {
+        self.locationManager = LocationManager()
+        // Initialize bindings and state wrappers first
+        self._viewFormat = State(initialValue: viewFormat)
+
+        // Now safe to use the already-initialized properties
+        if let userLocation = self.locationManager.lastKnownLocation {
+            // Round to 3 places
+            let lat1 = Double(userLocation.latitude).rounded(toPlaces: 3)
+            let lon1 = Double(userLocation.longitude).rounded(toPlaces: 3)
+            let detectedLocation = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 1")
+            // Update backing state wrapper correctly
+            self._Location1 = State(initialValue: detectedLocation)
+            self._Location2 = State(initialValue: detectedLocation)
+
+            // Set hemisphere states based on signs
+            self.NortSouthLoc1 = lat1 < 0 ? "S" : "N"
+            self.EastWestLoc1 = lon1 < 0 ? "W" : "E"
+
+            // Initialize Location 2 defaults to current location as well
+            self.NortSouthLoc2 = self.NortSouthLoc1
+            self.EastWestLoc2 = self.EastWestLoc1
+        } else {
+            // Default values when no location available
+            // Keep existing Location1 as provided by binding; only reset second location
+            self.NortSouthLoc2 = "N"
+            // keep East/West for loc1 as-is
+            self.EastWestLoc2 = "E"
+            self.hintVisible = false
+        }
+    }
+
     var body: some View {
-        ZStack {
-            VStack {
-                if sizeClass == .regular {
-                    MainView_iPad
-                } else {
-                    MainView_iPhone
-                }
-            }
-            .onAppear {
-                if let userLocation = locationManager.lastKnownLocation {
-                    latLoc1 = userLocation.latitude
-                    latLoc1 = Double(latLoc1).rounded(toPlaces: 3)
-                    if latLoc1 < 0 {
-                        latLoc1 = -latLoc1
-                        NortSouthLoc1 = "S"
+        NavigationStack {
+            ZStack {
+                VStack {
+                    if sizeClass == .regular {
+                        MainView_iPad
+                    } else {
+                        MainView_iPhone
                     }
-                    longLoc1 = userLocation.longitude
-                    longLoc1 = Double(longLoc1).rounded(toPlaces: 3)
-                    if longLoc1 < 0 {
-                        longLoc1 = -longLoc1
-                        EastWestLoc1 = "W"
-                    }
-                    
-                    latLoc2 = latLoc1
-                    NortSouthLoc2 = NortSouthLoc1
-                    
-                    longLoc2 = longLoc1
-                    EastWestLoc2 = EastWestLoc1
-                    
-                } else {
-                    latLoc1 = 0.0
-                    NortSouthLoc1 = "N"
-                    longLoc1 = 0.0
-                    EastWestLoc1 = "W"
-                    
-                    latLoc2 = 0.0
-                    NortSouthLoc1 = "N"
-                    longLoc2 = 0.0
-                    EastWestLoc1 = "W"
-                    
-                    hintVisible = false
+                    NavigationLink(
+                        destination:
+                            LocationsOnMap(
+                                Location1: $Location1,Location2: $Location2 ),
+                        label: {
+                        Text("Show Locations on Map")
+                            .font(.title3)
+                            .padding(.top, 20)
+                    })
                 }
-            }
-            if showDialog {
-                UserDialog
+                if showDialog {
+                    UserDialog
+                }
             }
         }
     }
@@ -266,14 +273,22 @@ struct DistanceView: View {
     fileprivate var Loc1Minimized: some View {
         HStack {
             Spacer()
-            Text(NortSouthLoc1)
-            Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+            if Location1.coordinate.latitude < 0 {
+                Text("S")
+            } else {
+                Text("N")
+            }
+            Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.latitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc1Lat)
                 }
             Text(" | ")
-            Text(EastWestLoc1)
-            Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
+            if Location1.coordinate.longitude < 0 {
+                Text("W")
+            } else {
+                Text("E")
+            }
+            Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.longitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc1Long)
                     
@@ -288,14 +303,22 @@ struct DistanceView: View {
     fileprivate var Loc1Minimized_iPad: some View {
         HStack {
             Spacer()
-            Text(NortSouthLoc1)
-            Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+            if Location1.coordinate.latitude < 0 {
+                Text("S")
+            } else {
+                Text("N")
+            }
+            Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.latitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc1Lat)
                 }
             Text(" | ")
-            Text(EastWestLoc1)
-            Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
+            if Location1.coordinate.longitude < 0 {
+                Text("W")
+            } else {
+                Text("E")
+            }
+            Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.longitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc1Long)
                 }
@@ -344,25 +367,24 @@ struct DistanceView: View {
             TopButtons
             HStack {
                 Spacer()
-                Text(NortSouthLoc1)
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
-                /*
-                 .onTapGesture {
-                 loc1LatViewVisible = false
-                 }
-                 */
+                if Location1.coordinate.latitude < 0 {
+                    Text("S")
+                } else {
+                    Text("N")
+                }
+                Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.latitude, viewFormat: viewFormat))
                 Spacer()
             }
             .font(.title)
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 180)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 180)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 180)
             }
         }
@@ -378,18 +400,18 @@ struct DistanceView: View {
             HStack {
                 Spacer()
                 Text(NortSouthLoc1)
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc1, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.latitude, viewFormat: viewFormat))
                 Spacer()
             }
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 280)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $latLoc1)
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
                     .frame(height: 280)
             }
         }
@@ -405,7 +427,7 @@ struct DistanceView: View {
             HStack {
                 Spacer()
                 Text(EastWestLoc1)
-                Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.longitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc1LongViewVisible = false
                     }
@@ -414,13 +436,13 @@ struct DistanceView: View {
             .font(.title)
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 180)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 180)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 180)
             }
         }
@@ -435,7 +457,7 @@ struct DistanceView: View {
             HStack {
                 Spacer()
                 Text(EastWestLoc1)
-                Text(DegreesToStringInSelectedFormat(degrees: longLoc1, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.longitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc1LongViewVisible = false
                     }
@@ -443,13 +465,13 @@ struct DistanceView: View {
             }
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 280)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $longLoc1)
+                RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
                     .frame(height: 280)
             }
         }
@@ -497,13 +519,13 @@ struct DistanceView: View {
         HStack {
             Spacer()
             Text(NortSouthLoc2)
-            Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Lat)
                 }
             Text(" | ")
             Text(EastWestLoc2)
-            Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Long)
                 }
@@ -518,13 +540,13 @@ struct DistanceView: View {
         HStack {
             Spacer()
             Text(NortSouthLoc2)
-            Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Lat)
                 }
             Text(" | ")
             Text(EastWestLoc2)
-            Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Long)
                 }
@@ -540,7 +562,7 @@ struct DistanceView: View {
             TopButtons
             HStack {
                 Text(NortSouthLoc2)
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc2LatViewVisible = false
                     }
@@ -548,13 +570,13 @@ struct DistanceView: View {
             .font(.title)
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                DMSEntryView_Rev0(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 180)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 180)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 180)
             }
         }
@@ -568,20 +590,20 @@ struct DistanceView: View {
             TopButtons_iPad
             HStack {
                 Text(NortSouthLoc2)
-                Text(DegreesToStringInSelectedFormat(degrees: latLoc2, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc2LatViewVisible = false
                     }
             }
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                DMSEntryView_Rev0(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 280)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $latLoc2)
+                RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
                     .frame(height: 280)
             }
         }
@@ -596,7 +618,7 @@ struct DistanceView: View {
             TopButtons
             HStack {
                 Text(EastWestLoc2)
-                Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc2LongViewVisible = false
                     }
@@ -604,13 +626,13 @@ struct DistanceView: View {
             .font(.title)
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                DMSEntryView_Rev0(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 180)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 180)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 180)
             }
         }
@@ -624,20 +646,20 @@ struct DistanceView: View {
             TopButtons_iPad
             HStack {
                 Text(EastWestLoc2)
-                Text(DegreesToStringInSelectedFormat(degrees: longLoc2, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
                     .onTapGesture {
                         loc2LongViewVisible = false
                     }
             }
             switch viewFormat {
             case .DMS:
-                DMSEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                DMSEntryView_Rev0(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 280)
             case .Raymarine:
-                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $longLoc2)
+                RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
                     .frame(height: 280)
             }
         }
@@ -682,7 +704,7 @@ struct DistanceView: View {
     fileprivate var DistanceView: some View {
         HStack {
             Spacer()
-            Text(CalculateDistance(latLoc1: latLoc1, longLoc1: longLoc1, latLoc2: latLoc2, longLoc2: longLoc2))
+            Text(CalculateDistance(Loc1: Location1, Loc2: Location2))
             Text("nm")
             Spacer()
         }
@@ -692,7 +714,7 @@ struct DistanceView: View {
     fileprivate var DistanceView_iPad: some View {
         HStack {
             Spacer()
-            Text(CalculateDistance(latLoc1: latLoc1, longLoc1: longLoc1, latLoc2: latLoc2, longLoc2: longLoc2))
+            Text(CalculateDistance(Loc1: Location1, Loc2: Location2))
             Text("nm")
             Spacer()
         }
@@ -807,7 +829,7 @@ struct DistanceView: View {
         }
     }
     
-    fileprivate func CalculateDistance(
+    fileprivate func CalculateDistance_Rev0(
         latLoc1: CLLocationDegrees,
         longLoc1: CLLocationDegrees,
         latLoc2: CLLocationDegrees,
@@ -830,7 +852,22 @@ struct DistanceView: View {
         let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
         return strDistance
     }
-    
+
+    fileprivate func CalculateDistance(
+        Loc1: Location,
+        Loc2: Location
+    ) -> String {
+
+        let p1 = CLLocationCoordinate2D(latitude: Loc1.coordinate.latitude, longitude: Loc1.coordinate.longitude)
+        let p2 = CLLocationCoordinate2D(latitude: Loc2.coordinate.latitude, longitude: Loc2.coordinate.longitude)
+
+        let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
+        let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
+        let nauticalMilesPerKilometer = 0.539957
+        let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
+        return strDistance
+    }
+
     /*
     fileprivate func LatLongToString(lat: CLLocationDegrees, long: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strLat = lat >= 0.0 ? "N" : "S"
@@ -870,17 +907,25 @@ struct DistanceView: View {
     }
 
     fileprivate func DegreesToString(degrees: CLLocationDegrees) -> String {
-        return "\(degrees)"
+        if degrees < 0 {
+            return "\(-degrees)"
+        } else {
+            return "\(degrees)"
+        }
     }
     
     fileprivate func DecimalDegrees(degrees: CLLocationDegrees) -> String {
-        let decimalDegrees = Double(degrees).rounded(toPlaces: 4)
+        var decimalDegrees = Double(degrees).rounded(toPlaces: 4)
+        if decimalDegrees < 0 {
+            decimalDegrees = -decimalDegrees
+        }
         return "\(decimalDegrees)\u{00B0}"
     }
 
     fileprivate func DegreesInDMS(degrees: CLLocationDegrees) -> String {
-        var d = Int(degrees)
-        var fractualMinutes = (degrees - Double(d)) * 60
+        let degreesWithoutSign = degrees < 0 ? -degrees : degrees
+        var d = Int(degreesWithoutSign)
+        var fractualMinutes = (degreesWithoutSign - Double(d)) * 60
         if fractualMinutes == 60 {
             d += 1
             fractualMinutes = 0
@@ -896,22 +941,21 @@ struct DistanceView: View {
     }
 
     fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
-        let d = Int(degrees)
-        let fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
+        var d = Int(degrees)
+        var fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
+        if degrees < 0 {
+            d = -d
+            if fractualMinutes < 0 {
+                fractualMinutes = -fractualMinutes
+            }
+        }
         return "\(d)\u{00B0} \(fractualMinutes)'"
     }
 
 }
 
 #Preview {
-    @Previewable @State var latLoc1: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
-    @Previewable @State var longaLoc1: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
-    @Previewable @State var latLoc2: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
-    @Previewable @State var longLoc2: CLLocationDegrees = CLLocationDegrees(floatLiteral: 0.0)
-
     var viewFormat: ViewFormat = .DDM
-
-    return DistanceView(latLoc1: $latLoc1, longLoc1: $longLoc2, latLoc2: $latLoc2, longLoc2: $longLoc2, viewFormat: viewFormat)
+    DistanceView(viewFormat: viewFormat)
 }
-
 
