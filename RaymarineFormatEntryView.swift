@@ -74,6 +74,10 @@ struct RaymarineFormatEntryView: View {
     }
     
     fileprivate mutating func initializeDegreeValues() {
+        if hemisphere == "S" || hemisphere == "W" {
+            _degrees = State(initialValue: -degrees)
+            _decimalDegrees = State(initialValue: -decimalDegrees)
+        }
         let fractionalDegrees = decimalDegrees - Double(degrees)
         let decimalMinutes = fractionalDegrees * 60
         _minutesInDecimalFormat = State(initialValue: Double(decimalMinutes))
@@ -394,7 +398,6 @@ struct RaymarineFormatEntryView: View {
                     .scaleEffect(2.0)
                     .frame(width: 120, height: 100)
                     .onChange(of: degrees) {
-                        //updateDegreesValue()
                         updateDegreesValueForRaymarineFormat()
                     }
                     Text(" ")
@@ -560,6 +563,9 @@ struct RaymarineFormatEntryView: View {
         if let test = Double(strDecimalMinutes) {
             minutesInDecimalFormat = test
             locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+            if hemisphere == "S" || hemisphere == "W" {
+                locDegrees = -locDegrees
+            }
         }
     }
     

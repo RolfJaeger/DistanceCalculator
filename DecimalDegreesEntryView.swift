@@ -66,19 +66,16 @@ struct DecimalDegreesEntryView: View {
     }
     
     fileprivate mutating func initializeDegreeValues() {
+        if hemisphere == "S" || hemisphere == "W" {
+            _degrees = State(initialValue: -degrees)
+            _decimalDegrees = State(initialValue: -decimalDegrees)
+        }
         let fractionalDegrees = decimalDegrees - Double(degrees)
         let decimalMinutes = fractionalDegrees * 60
         _minutesInDecimalFormat = State(initialValue: Double(decimalMinutes))
         _minutesForDMSView = State(initialValue: Int(decimalMinutes.rounded(toPlaces: 3)))
         _minutesForRaymarineView = State(initialValue: Int(decimalMinutes.rounded(toPlaces: 3)))
         let decimalSeconds = Int(((minutesInDecimalFormat - Double(minutesForRaymarineView))*60).rounded())
-        /*
-        _seconds = State(initialValue: decimalSeconds)
-        if seconds == 60 {
-            _minutesForDMSView = State(initialValue: Int(decimalMinutes.rounded()))
-            _seconds = State(initialValue: 0)
-        }
-        */
         
         if let tryTenth = Int(extractTenth(degrees: decimalDegrees)) {
             _degreeTenth = State(initialValue: Int(tryTenth))
@@ -583,6 +580,9 @@ struct DecimalDegreesEntryView: View {
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView)
         locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+        if hemisphere == "S" || hemisphere == "W" {
+            locDegrees = -locDegrees
+        }
     }
     
     fileprivate func updateDegreesValueDecimalDegreesFormat() {
@@ -592,6 +592,10 @@ struct DecimalDegreesEntryView: View {
         if let test = Double(strDecimalDegrees) {
             locDegrees = test
             decimalDegrees = locDegrees
+            if hemisphere == "S" || hemisphere == "W" {
+                locDegrees = -locDegrees
+            }
+
         }
     }
     

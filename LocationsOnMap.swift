@@ -56,50 +56,6 @@ struct LocationsOnMap: View {
     }
 }
 
-struct CustomDraggableAnnotationView_Rev0: View {
-    
-    @Binding var coordinate: CLLocationCoordinate2D
-    @Binding var latLoc: CLLocationDegrees
-    @Binding var longLoc: CLLocationDegrees
-
-    var mapProxy: MapProxy? // Pass the map proxy here
-    
-    var locationName: String
-
-    var body: some View {
-        if locationName == "Location 1" {
-            Image(systemName: "pin.fill")
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Circle().fill(.blue).shadow(radius: 4))
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if let newCoordinate = mapProxy?.convert(value.location, from: .local) {
-                                coordinate = newCoordinate
-                                latLoc = coordinate.latitude
-                                longLoc = coordinate.longitude
-                            }
-                        }
-                )
-
-        } else {
-            Image(systemName: "pin.fill")
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Circle().fill(.red).shadow(radius: 4))
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if let newCoordinate = mapProxy?.convert(value.location, from: .local) {
-                                coordinate = newCoordinate
-                            }
-                        }
-                )
-        }
-    }
-}
-
 struct CustomDraggableAnnotationView: View {
     
     @Binding var location: Location
