@@ -106,6 +106,9 @@ struct LocationsOnMap: View {
     }
 
     fileprivate func updateCoordinate(location: Location, from translation: CGSize) {
+        if abs(translation.height) > 100 || abs(translation.width) > 100 {
+            return
+        }
         let metersPerPoint = region.region?.span.latitudeDelta ?? 0.01
         let latOffset = -translation.height * metersPerPoint / 300
         let lonOffset = translation.width * metersPerPoint / 300
