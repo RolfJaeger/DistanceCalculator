@@ -69,10 +69,11 @@ struct DistanceView: View {
             // Round to 3 places
             let lat1 = Double(userLocation.latitude).rounded(toPlaces: 3)
             let lon1 = Double(userLocation.longitude).rounded(toPlaces: 3)
-            let detectedLocation = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 1")
+            var detectedLoc1 = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 1")
             // Update backing state wrapper correctly
-            self._Location1 = State(initialValue: detectedLocation)
-            self._Location2 = State(initialValue: detectedLocation)
+            self._Location1 = State(initialValue: detectedLoc1)
+            detectedLoc1.name = "Location 2"
+            self._Location2 = State(initialValue: detectedLoc1)
 
             self._NortSouthLoc1 = lat1 < 0 ? State(initialValue: "S") : State(initialValue: "N")
             self._EastWestLoc1 = lon1 < 0 ? State(initialValue: "W") : State(initialValue: "E")
@@ -101,7 +102,10 @@ struct DistanceView: View {
                     NavigationLink(
                         destination:
                             LocationsOnMap(
-                                Location1: $Location1,Location2: $Location2 ),
+                                Location1: $Location1,Location2: $Location2,
+                                latSpan: calcLatDelta(),
+                                longSpan: calcLongDelta()
+                            ),
                         label: {
                         Text("Show Locations on Map")
                             .font(.title3)
@@ -804,7 +808,7 @@ struct DistanceView: View {
         }
     }
     
-    private var UserDialog: some View {
+    fileprivate var UserDialog: some View {
         VStack {
             Text("Are you sure you want to switch hemisphere ?")
                 .font(.title)
@@ -863,8 +867,6 @@ struct DistanceView: View {
         .shadow(radius: 10)
 
     }
-    
-
     
     fileprivate func SetViewVisibility(viewName: ViewName) {
         loc1LatViewVisible = false
@@ -947,7 +949,7 @@ struct DistanceView: View {
 
     fileprivate func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
         var d = Int(degrees)
-        var fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 4)
+        var fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
         if degrees < 0 {
             d = -d
             if fractualMinutes < 0 {
@@ -955,6 +957,16 @@ struct DistanceView: View {
             }
         }
         return "\(d)\u{00B0} \(fractualMinutes)'"
+    }
+
+    fileprivate func calcLatDelta() -> CLLocationDegrees {
+        let delta = abs(Location1.coordinate.latitude - Location2.coordinate.latitude) * 1.1
+        return delta
+    }
+
+    fileprivate func calcLongDelta() -> CLLocationDegrees {
+        let delta = abs(Location1.coordinate.longitude - Location2.coordinate.longitude) * 1.1
+        return delta
     }
 
 }
