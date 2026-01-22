@@ -99,18 +99,6 @@ struct DistanceView: View {
                     } else {
                         MainView
                     }
-                    NavigationLink(
-                        destination:
-                            LocationsOnMap(
-                                Location1: $Location1,Location2: $Location2,
-                                latSpan: calcLatDelta(),
-                                longSpan: calcLongDelta()
-                            ),
-                        label: {
-                        Text("Show Locations on Map")
-                            .font(.title3)
-                            .padding(.top, 20)
-                    })
                 }
                 if showDialog {
                     UserDialog
@@ -163,6 +151,19 @@ struct DistanceView: View {
             
             HintView
             Spacer()
+            NavigationLink(
+                destination:
+                    LocationsOnMap(
+                        Location1: $Location1,Location2: $Location2,
+                        latSpan: calcLatDelta(),
+                        longSpan: calcLongDelta()
+                    ),
+                label: {
+                Text("Show Locations on Map")
+                    .font(.title3)
+                    .padding(.top, 20)
+            })
+
         }
     }
 
@@ -195,6 +196,20 @@ struct DistanceView: View {
             
             HintView_iPad
             Spacer()
+            NavigationLink(
+                destination:
+                    LocationsOnMap_iPad(
+                        Location1: $Location1,Location2: $Location2,
+                        latSpan: calcLatDelta(),
+                        longSpan: calcLongDelta()
+                    ),
+                label: {
+                Text("Show Locations on Map")
+                    .font(Font.system(size: 30, weight: .bold, design: .default))
+                    .padding(.top, 20)
+                    .padding(.bottom, 20)
+            })
+
         }
     }
 
