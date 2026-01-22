@@ -111,3 +111,17 @@ enum Raymarine_PickerName: String {
     case Thousandth
 }
 
+func CalculateDistance(
+    Loc1: Location,
+    Loc2: Location
+) -> String {
+
+    let p1 = CLLocationCoordinate2D(latitude: Loc1.coordinate.latitude, longitude: Loc1.coordinate.longitude)
+    let p2 = CLLocationCoordinate2D(latitude: Loc2.coordinate.latitude, longitude: Loc2.coordinate.longitude)
+
+    let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
+    let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
+    let nauticalMilesPerKilometer = 0.539957
+    let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
+    return strDistance
+}

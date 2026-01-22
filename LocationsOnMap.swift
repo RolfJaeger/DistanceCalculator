@@ -18,6 +18,7 @@ struct LocationsOnMap: View {
     //@State private var location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 34.011_286, longitude: -120.05), name: "Location 1")
     @State private var location1: Location
     @State private var location2: Location
+    @State private var strDistance: String = "0.0"
     
     @State private var region = MapCameraPosition.region(
         MKCoordinateRegion(
@@ -41,6 +42,8 @@ struct LocationsOnMap: View {
         _location2 = State(
             initialValue: Location2.wrappedValue)
 
+        _strDistance = State(initialValue:  CalculateDistance(Loc1: location1, Loc2: location2))
+        
         _region = State(initialValue:  MapCameraPosition.region(
             MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
@@ -48,43 +51,60 @@ struct LocationsOnMap: View {
             )
             ))
     }
+    
     var body: some View {
-        Map(position: $region) {
-            Annotation(coordinate: location1.coordinate,
-                       content: {
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 24, height: 24)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                updateCoordinate(location: location1,  from: value.translation)
-                                Location1 = location1
-                            }
-                    )
-
-            }, label: {
-                Text(location1.name)
-            })
-            Annotation(coordinate: location2.coordinate,
-                       content: {
-                Circle()
-                    .fill(.red)
-                    .frame(width: 24, height: 24)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                updateCoordinate(location: location2,  from: value.translation)
-                                Location2 = location2
-                            }
-                        
-                    )
-            }, label: {
-                Text(location2.name)
-            })
+        VStack {
+            Map(position: $region) {
+                Annotation(coordinate: location1.coordinate,
+                           content: {
+                    Circle()
+                        .fill(.blue)
+                        .frame(width: 24, height: 24)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    updateCoordinate(location: location1,  from: value.translation)
+                                    Location1 = location1
+                                   strDistance = CalculateDistance(Loc1: location1, Loc2: location2)
+                                }
+                        )
+                    
+                }, label: {
+                    Text(location1.name)
+                })
+                Annotation(coordinate: location2.coordinate,
+                           content: {
+                    Circle()
+                        .fill(.red)
+                        .frame(width: 24, height: 24)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    updateCoordinate(location: location2,  from: value.translation)
+                                    Location2 = location2
+                                    strDistance = CalculateDistance(Loc1: location1, Loc2: location2)
+                                }
+                            
+                        )
+                }, label: {
+                    Text(location2.name)
+                })
+            }
+            DistanceView
         }
+        .edgesIgnoringSafeArea(.bottom)
     }
     
+    fileprivate var DistanceView: some View {
+        HStack {
+            Text("Distance:")
+                .bold()
+            Text(strDistance)
+            Text("nm")
+        }
+        .frame(height: 30.0)
+        .padding(.bottom, 5)
+    }
     fileprivate func calcLatCenter() -> CLLocationDegrees {
         let center = (location1.coordinate.latitude + location2.coordinate.latitude)/2.0
         return center
@@ -112,8 +132,10 @@ struct LocationsOnMap: View {
         let metersPerPoint = region.region?.span.latitudeDelta ?? 0.01
         let latOffset = -translation.height * metersPerPoint / 300
         let lonOffset = translation.width * metersPerPoint / 300
+        /*
         print("Current Lat: \(location.coordinate.latitude) | Current Long: \(location.coordinate.longitude)")
         print("Lat Offset: \(latOffset) | Long Offset: \(lonOffset)")
+        */
         if location.name == "Location 1" {
             location1.coordinate.latitude += latOffset
             location1.coordinate.longitude += lonOffset
@@ -122,6 +144,37 @@ struct LocationsOnMap: View {
             location2.coordinate.longitude += lonOffset
         }
     }
+
+    fileprivate func updateCoordinate_Rev1(location: Location, from translation: CGSize) -> Location {
+        guard let region = region.region else { return location }
+
+        let latDelta = region.span.latitudeDelta
+        let lonDelta = region.span.longitudeDelta
+
+        let latOffset = -translation.height * latDelta / 300
+        let lonOffset = translation.width * lonDelta / 300
+
+        var newLat = location.coordinate.latitude + latOffset
+        var newLon = location.coordinate.longitude + lonOffset
+
+        let minLat = region.center.latitude - latDelta / 2
+        let maxLat = region.center.latitude + latDelta / 2
+        let minLon = region.center.longitude - lonDelta / 2
+        let maxLon = region.center.longitude + lonDelta / 2
+
+        newLat = clamp(newLat, min: minLat, max: maxLat)
+        newLon = clamp(newLon, min: minLon, max: maxLon)
+
+        let newLocation = Location(
+            coordinate: CLLocationCoordinate2D(latitude: newLat, longitude: newLon),
+            name: location.name)
+        return newLocation
+    }
+    
+    fileprivate func clamp<T: Comparable>(_ value: T, min: T, max: T) -> T {
+        Swift.min(Swift.max(value, min), max)
+    }
+
 
 }
 
@@ -176,3 +229,4 @@ struct CustomDraggableAnnotationView: View {
         latSpan: 0.1,
         longSpan: 0.1)
 }
+

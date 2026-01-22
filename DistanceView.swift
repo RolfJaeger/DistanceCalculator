@@ -885,6 +885,7 @@ struct DistanceView: View {
         }
     }
     
+    /*
     fileprivate func CalculateDistance(
         Loc1: Location,
         Loc2: Location
@@ -899,7 +900,8 @@ struct DistanceView: View {
         let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
         return strDistance
     }
-
+    */
+    
     fileprivate func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strDegrees: String
         switch viewFormat {
