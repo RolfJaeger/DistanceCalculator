@@ -16,7 +16,9 @@ struct MapPlaygroundApp: App {
     var body: some Scene {
         WindowGroup {
             DistanceView(viewFormat: viewFormat)
-            //DraggableMap()
+            //DraggablePinView()
+            //MultipleDraggablePins()
+            //TestOfDraggableMapView()
         }
     }
 }

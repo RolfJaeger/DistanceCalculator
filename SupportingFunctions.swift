@@ -32,7 +32,6 @@ struct Location: Identifiable {
     var name: String
 }
 
-
 enum ViewName: String {
     case Loc1Lat
     case Loc1Long

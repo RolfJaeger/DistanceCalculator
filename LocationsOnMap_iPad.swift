@@ -15,17 +15,55 @@ struct LocationsOnMap_iPad: View {
     @Binding var Location1: Location
     @Binding var Location2: Location
     
-    //@State private var location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 34.011_286, longitude: -120.05), name: "Location 1")
+    enum DragState {
+        case inactive
+        case pressing
+        case dragging(translation: CGSize)
+        
+        var translation: CGSize {
+            switch self {
+            case .inactive, .pressing:
+                return .zero
+            case .dragging(let translation):
+                return translation
+            }
+        }
+        
+        var isActive: Bool {
+            switch self {
+            case .inactive:
+                return false
+            case .pressing, .dragging:
+                return true
+            }
+        }
+        
+        var isDragging: Bool {
+            switch self {
+            case .inactive, .pressing:
+                return false
+            case .dragging:
+                return true
+            }
+        }
+    }
+    
+    @GestureState private var dragState = DragState.inactive
+    
+    @State private var viewState = CGSize.zero
     @State private var location1: Location
     @State private var location2: Location
     @State private var strDistance: String = "0.0"
+    @State private var locations = [Location]()
     
-    @State private var region = MapCameraPosition.region(
+    @State private var region_Rev0 = MapCameraPosition.region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.0090),
             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         )
     )
+    
+    @State private var region: MKCoordinateRegion?
 
     init(Location1: Binding<Location>,
          Location2: Binding<Location>,
@@ -33,68 +71,48 @@ struct LocationsOnMap_iPad: View {
          longSpan: Double
     ) {
         
+        // Assign the incoming bindings directly to the @Binding-backed storage
         _Location1 = Location1
         _Location2 = Location2
 
-        _location1 = State(
-            initialValue: Location1.wrappedValue)
+        // Initialize local state copies from the wrapped values
+        let loc1 = Location1.wrappedValue
+        let loc2 = Location2.wrappedValue
 
-        _location2 = State(
-            initialValue: Location2.wrappedValue)
+        _location1 = State(initialValue: loc1)
+        _location2 = State(initialValue: loc2)
 
-        _strDistance = State(initialValue:  CalculateDistance(Loc1: location1, Loc2: location2))
-        
-        _region = State(initialValue:  MapCameraPosition.region(
+        _strDistance = State(initialValue: CalculateDistance(Loc1: loc1, Loc2: loc2))
+
+        _region = State(initialValue:
             MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
+                center: CLLocationCoordinate2D(latitude: (loc1.coordinate.latitude + loc2.coordinate.latitude) / 2.0,
+                                                longitude: (loc1.coordinate.longitude + loc2.coordinate.longitude) / 2.0),
                 span: MKCoordinateSpan(latitudeDelta: latSpan, longitudeDelta: longSpan)
-            )
             ))
+
+        _locations = State(initialValue: [loc1, loc2])
+        
     }
     
     var body: some View {
         VStack {
-            MapReader {_ in 
-                Map(position: $region) {
-                    Annotation(coordinate: location1.coordinate,
-                               content: {
-                        Circle()
-                            .fill(.blue)
-                            .frame(width: 24, height: 24)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        updateCoordinate(location: location1,  from: value.translation)
-                                        Location1 = location1
-                                        strDistance = CalculateDistance(Loc1: location1, Loc2: location2)
-                                    }
-                            )
-                        
-                    }, label: {
-                        Text(location1.name)
-                    })
-                    Annotation(coordinate: location2.coordinate,
-                               content: {
-                        Circle()
-                            .fill(.red)
-                            .frame(width: 24, height: 24)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        updateCoordinate(location: location2,  from: value.translation)
-                                        Location2 = location2
-                                        strDistance = CalculateDistance(Loc1: location1, Loc2: location2)
-                                    }
-                                
-                            )
-                    }, label: {
-                        Text(location2.name)
-                    })
-                }
-            }
+            DraggableMapView(locations: $locations, strDistance: $strDistance, region: region)
+                .onAppear(perform: {
+                    region = MKCoordinateRegion(
+                            center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
+                            span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
+                        )
+
+                })
             DistanceView
+                //.ignoresSafeArea()
         }
         .edgesIgnoringSafeArea(.bottom)
+        .onDisappear {
+            Location1.coordinate = locations[0].coordinate
+            Location2.coordinate = locations[1].coordinate
+        }
     }
     
     fileprivate var DistanceView: some View {
@@ -131,13 +149,9 @@ struct LocationsOnMap_iPad: View {
         if abs(translation.height) > 100 || abs(translation.width) > 100 {
             return
         }
-        let metersPerPoint = region.region?.span.latitudeDelta ?? 0.01
+        let metersPerPoint = region!.span.latitudeDelta ?? 0.01
         let latOffset = -translation.height * metersPerPoint / 300
         let lonOffset = translation.width * metersPerPoint / 300
-        /*
-        print("Current Lat: \(location.coordinate.latitude) | Current Long: \(location.coordinate.longitude)")
-        print("Lat Offset: \(latOffset) | Long Offset: \(lonOffset)")
-        */
         if location.name == "Location 1" {
             location1.coordinate.latitude += latOffset
             location1.coordinate.longitude += lonOffset
@@ -148,7 +162,7 @@ struct LocationsOnMap_iPad: View {
     }
 
     fileprivate func updateCoordinate_Rev1(location: Location, from translation: CGSize) -> Location {
-        guard let region = region.region else { return location }
+        guard let region = region else { return location }
 
         let latDelta = region.span.latitudeDelta
         let lonDelta = region.span.longitudeDelta

@@ -69,11 +69,11 @@ struct DistanceView: View {
             // Round to 3 places
             let lat1 = Double(userLocation.latitude).rounded(toPlaces: 3)
             let lon1 = Double(userLocation.longitude).rounded(toPlaces: 3)
-            var detectedLoc1 = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 1")
-            // Update backing state wrapper correctly
+            let detectedLoc1 = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 1")
             self._Location1 = State(initialValue: detectedLoc1)
-            detectedLoc1.name = "Location 2"
-            self._Location2 = State(initialValue: detectedLoc1)
+            let detectedLoc2 = Location(coordinate: CLLocationCoordinate2D(latitude: lat1, longitude: lon1), name: "Location 2")
+            self._Location2 = State(initialValue: detectedLoc2)
+            // Update backing state wrapper correctly
 
             self._NortSouthLoc1 = lat1 < 0 ? State(initialValue: "S") : State(initialValue: "N")
             self._EastWestLoc1 = lon1 < 0 ? State(initialValue: "W") : State(initialValue: "E")
