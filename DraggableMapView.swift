@@ -9,6 +9,38 @@ import SwiftUI
 import CoreLocation
 import MapKit
 
+//
+//  DraggableMapView.swift
+//  MapPlayground
+//
+//  Created by Rolf Jaeger on 1/27/26.
+//
+
+import SwiftUI
+import CoreLocation
+import MapKit
+
+// Source - https://stackoverflow.com/a
+// Posted by Vishnu gondlekar, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-01-29, License - CC BY-SA 3.0
+
+class CustomAnnotationView : MKPinAnnotationView
+{
+    let helloLabel:UILabel = UILabel.init(frame:CGRectMake(-40, 30, 100, 40)) //your desired frame
+
+    func showLabel(title : String)
+    {
+        helloLabel.text = title
+        helloLabel.textAlignment = .center
+        //set further properties
+        self.addSubview(helloLabel)
+    }
+
+    func hideLabel() {
+        helloLabel.removeFromSuperview()
+    }
+}
+
 final class Coordinator: NSObject, MKMapViewDelegate {
 
     var parent: DraggableMapView
@@ -26,13 +58,17 @@ final class Coordinator: NSObject, MKMapViewDelegate {
         let annotation = MKPointAnnotation()
         annotation.coordinate = location.coordinate
         annotations[location.id] = annotation
+        annotation.title = location.name
         return annotation
     }
 
     func mapView(_ mapView: MKMapView,
                  viewFor annotation: MKAnnotation) -> MKAnnotationView {
 
-        let view = MKPinAnnotationView(annotation: annotation, reuseIdentifier: nil)
+        let view = CustomAnnotationView(annotation: annotation, reuseIdentifier: nil)
+        view.showLabel(title: annotation.title!!)
+        view.pinTintColor = annotation.title == "Location 1" ? .blue : .red
+        //view.focusEffect =
         view.isDraggable = true
         view.canShowCallout = false
         return view

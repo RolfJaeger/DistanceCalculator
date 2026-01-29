@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import CoreLocation
+import MapKit
 
 //*******************
 //Fonts for iPad only
@@ -30,6 +31,20 @@ struct Location: Identifiable {
     let id = UUID()
     var coordinate: CLLocationCoordinate2D
     var name: String
+}
+
+final class LocationAnnotation: NSObject, MKAnnotation {
+    let id: UUID
+    let name: String
+    dynamic var coordinate: CLLocationCoordinate2D
+
+    init(location: Location) {
+        self.id = location.id
+        self.name = location.name
+        self.coordinate = location.coordinate
+    }
+
+    var title: String? { name }
 }
 
 enum ViewName: String {

@@ -153,7 +153,7 @@ struct DistanceView: View {
             Spacer()
             NavigationLink(
                 destination:
-                    LocationsOnMap(
+                    LocationsOnMap_iPad(
                         Location1: $Location1,Location2: $Location2,
                         latSpan: calcLatDelta(),
                         longSpan: calcLongDelta()
