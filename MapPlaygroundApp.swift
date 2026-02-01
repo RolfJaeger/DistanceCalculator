@@ -11,12 +11,14 @@ import CoreLocation
 @main
 struct MapPlaygroundApp: App {
 
-    var viewFormat: ViewFormat = .Raymarine
-
+    //var viewFormat: ViewFormat = .Raymarine
+    @State var viewFormat: ViewFormat = .Raymarine
+    
     var body: some Scene {
         WindowGroup {
             DistanceView(viewFormat: viewFormat)
             //TestOfDraggableMapView()
+            //LocationDBView(viewFormat: $viewFormat)
         }
     }
 }

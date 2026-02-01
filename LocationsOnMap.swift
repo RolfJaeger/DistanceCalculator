@@ -245,7 +245,7 @@ struct CustomDraggableAnnotationView: View {
 */
 
 #Preview {
-    @Previewable @State var Loc1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37.5890, longitude: -122.5890), name: "Location 1")
+   @Previewable @State var Loc1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37.5890, longitude: -122.5890), name: "Location 1")
     @Previewable @State var Loc2 = Location(coordinate: CLLocationCoordinate2D(latitude: 37.5890, longitude: -122.5890), name: "Location 1")
 
     LocationsOnMap(

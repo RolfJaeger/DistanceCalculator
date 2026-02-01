@@ -27,24 +27,43 @@ extension Double {
     }
 }
 
-struct Location: Identifiable {
+struct Location: Identifiable, Hashable, Equatable {
     let id = UUID()
     var coordinate: CLLocationCoordinate2D
     var name: String
+    static func ==(lhs: Location, rhs: Location) -> Bool {
+        return lhs.name == rhs.name
+    }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+    }
 }
 
-final class LocationAnnotation: NSObject, MKAnnotation {
-    let id: UUID
-    let name: String
-    dynamic var coordinate: CLLocationCoordinate2D
+struct CodableLocation: Codable, Hashable {
+    var coordinate: CodableCoordinate
+    var name: String
+    static func ==(lhs: CodableLocation, rhs: CodableLocation) -> Bool {
+        return lhs.name == rhs.name
+    }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+    }
+}
 
-    init(location: Location) {
-        self.id = location.id
-        self.name = location.name
-        self.coordinate = location.coordinate
+struct CodableCoordinate: Codable {
+    var latitude: CLLocationDegrees // Typealias for Double
+    var longitude: CLLocationDegrees
+
+    // Initialize from CLLocationCoordinate2D
+    init(coordinate: CLLocationCoordinate2D) {
+        self.latitude = coordinate.latitude
+        self.longitude = coordinate.longitude
     }
 
-    var title: String? { name }
+    // Computed property to convert back to the original type
+    var clCoordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
 }
 
 enum ViewName: String {
@@ -139,3 +158,58 @@ func CalculateDistance(
     let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
     return strDistance
 }
+
+func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: ViewFormat) -> String {
+    var strDegrees: String
+    switch viewFormat {
+    case .DMS:
+        strDegrees = DegreesInDMS(degrees: degrees)
+    case .DDM:
+        strDegrees = DecimalDegrees(degrees: degrees)
+    case .Raymarine:
+        strDegrees = DegreesInRaymarineFormat(degrees: degrees)
+    }
+    return strDegrees
+}
+
+func DegreesInDMS(degrees: CLLocationDegrees) -> String {
+    let degreesWithoutSign = degrees < 0 ? -degrees : degrees
+    var d = Int(degreesWithoutSign)
+    var fractualMinutes = (degreesWithoutSign - Double(d)) * 60
+    if fractualMinutes == 60 {
+        d += 1
+        fractualMinutes = 0
+    }
+    var m = Int(fractualMinutes)
+    var doubleSeconds = Double((fractualMinutes - Double(m))*60).rounded(toPlaces: 0)
+    if doubleSeconds == 60 {
+        m += 1
+        doubleSeconds = 0
+    }
+    let s = Int(doubleSeconds.rounded(toPlaces: 0))
+    return "\(d)\u{00B0} \(m)' \(s)\""
+}
+
+func DecimalDegrees(degrees: CLLocationDegrees) -> String {
+    var decimalDegrees = Double(degrees).rounded(toPlaces: 4)
+    if decimalDegrees < 0 {
+        decimalDegrees = -decimalDegrees
+    }
+    return "\(decimalDegrees)\u{00B0}"
+}
+
+
+func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
+    var d = Int(degrees)
+    var fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
+    if degrees < 0 {
+        d = -d
+        if fractualMinutes < 0 {
+            fractualMinutes = -fractualMinutes
+        }
+    }
+    return "\(d)\u{00B0} \(fractualMinutes)'"
+}
+
+
+
