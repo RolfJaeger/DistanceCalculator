@@ -163,7 +163,6 @@ struct DistanceView: View {
                         Image(systemName: "bookmark")
                 })
             }
-            
             Location2Details
             
             HintView
@@ -201,35 +200,74 @@ struct DistanceView: View {
                 .bold()
                 .padding(.bottom, 0)
             DistanceView_iPad
-            Text("Location 1")
-                .font(Font.system(size: 40, weight: .bold, design: .default))
-                .bold()
+            HStack {
+                Button(action: {
+                    if let userLocation = locationManager.lastKnownLocation {
+                        Location1.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
+                        Location1.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
+                    }
+                }, label: {
+                    Text("Location 1")
+                        .font(Font.system(size: 40, weight: .bold, design: .default))
+                        .bold()
+                        .padding(.top, 10)
+                        .padding(.bottom, 5)
+                })
+                .buttonStyle(.bordered)
                 .padding(.top, 10)
                 .padding(.bottom, 5)
+                NavigationLink(
+                    destination:
+                        LocationDBView(viewFormat: $viewFormat, currentLocation: $Location1),
+                    label: {
+                        Image(systemName: "bookmark")
+                            .font(Font.system(size: 30, weight: .regular, design: .default))
+                    })
+            }
             Location1Details_iPad
-            Text("Location 2")
-                .font(Font.system(size: 40, weight: .bold, design: .default))
-                .bold()
+            HStack {
+                Button(action: {
+                    if let userLocation = locationManager.lastKnownLocation {
+                        Location2.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
+                        Location2.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
+                    }
+                }, label: {
+                    Text("Location 2")
+                        .font(Font.system(size: 40, weight: .bold, design: .default))
+                        .bold()
+                        .padding(.top, 10)
+                        .padding(.bottom, 5)
+                })
+                .buttonStyle(.bordered)
                 .padding(.top, 10)
                 .padding(.bottom, 5)
+                NavigationLink(
+                    destination:
+                        LocationDBView(viewFormat: $viewFormat, currentLocation: $Location2),
+                    label: {
+                        Image(systemName: "bookmark")
+                            .font(Font.system(size: 30, weight: .regular, design: .default))
+                })
+            }
             Location2Details_iPad
-            
+    
             HintView_iPad
             Spacer()
-            NavigationLink(
-                destination:
-                    LocationsOnMap(
-                        Location1: $Location1,Location2: $Location2,
-                        latSpan: calcLatDelta(),
-                        longSpan: calcLongDelta()
-                    ),
-                label: {
-                Text("Show Locations on Map")
-                    .font(Font.system(size: 30, weight: .bold, design: .default))
-                    .padding(.top, 20)
-                    .padding(.bottom, 20)
-            })
-
+            if isNoDetailViewVisible() {
+                NavigationLink(
+                    destination:
+                        LocationsOnMap(
+                            Location1: $Location1,Location2: $Location2,
+                            latSpan: calcLatDelta(),
+                            longSpan: calcLongDelta()
+                        ),
+                    label: {
+                        Text("Show Locations on Map")
+                            .font(Font.system(size: 30, weight: .bold, design: .default))
+                            .padding(.top, 20)
+                            .padding(.bottom, 20)
+                    })
+            }
         }
     }
 
@@ -252,7 +290,8 @@ struct DistanceView: View {
                 if hintVisible {
                     Text("Initially your location is shown.")
                         .padding(.top, 20)
-                    Text("Tap coordinates to modify.")
+                    Text("Tap coordinates to modify")
+                    Text("or tap the location buttons to ping.")
                 }
             }
         }

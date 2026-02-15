@@ -10,6 +10,8 @@ import SwiftUI
 import CoreLocation
 import MapKit
 
+var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
 //*******************
 //Fonts for iPad only
 //*******************

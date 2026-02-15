@@ -51,7 +51,8 @@ struct LocationDBView: View {
     var body: some View {
         VStack {
             Text("Location Database")
-                .font(.title)
+                .font(isPad ? .system(size: 40.0) : .title)
+                .padding(.top, 10)
                 .bold()
             SwitchFormatView
             CurrentLocationView
@@ -72,15 +73,19 @@ struct LocationDBView: View {
         VStack {
             VStack {
                 Text("Location Format")
+                    .font(isPad ? .system(size: 30.0) : .body)
                     .bold()
-                switch viewFormat {
-                case .DMS:
-                    Text("Degrees | Minutes | Seconds")
-                case .DDM:
-                    Text("Decimal Degrees")
-                case .Raymarine:
-                    Text("Degrees | Decimal Minutes")
+                VStack {
+                    switch viewFormat {
+                    case .DMS:
+                        Text("Degrees | Minutes | Seconds")
+                    case .DDM:
+                        Text("Decimal Degrees")
+                    case .Raymarine:
+                        Text("Degrees | Decimal Minutes")
+                    }
                 }
+                .font(isPad ? .system(size: 20.0) : .body)
             }
             Button(action: {
                 switch viewFormat {
@@ -91,7 +96,10 @@ struct LocationDBView: View {
                 case .Raymarine:
                     viewFormat = .DDM
                 }
-            }, label: {Text(txtSwitchFormat)})
+            }, label: {
+                Text(txtSwitchFormat)
+                    .font(isPad ? .system(size: 20.0) : .body)
+            })
             .buttonStyle(.bordered)
         }
     }
@@ -99,11 +107,13 @@ struct LocationDBView: View {
     fileprivate var CurrentLocationView: some View {
         VStack {
             Text("Current Location:")
+                .bold()
             HStack {
                 Text(DegreesToStringInSelectedFormat(degrees: currentLocation.coordinate.latitude, viewFormat: viewFormat))
                 Text(DegreesToStringInSelectedFormat(degrees: currentLocation.coordinate.longitude, viewFormat: viewFormat))
             }
         }
+        .font(isPad ? .system(size: 30.0) : .body)
     }
 
     fileprivate var DealWithSaveIntention: some View {
@@ -114,6 +124,7 @@ struct LocationDBView: View {
                         showSaveLocationView.toggle()
                     }, label: {
                         Text("Save in Database")
+                            .font(isPad ? .system(size: 30.0) : .body)
                     })
                 } else {
                     if !isLocationSaved {
@@ -132,6 +143,7 @@ struct LocationDBView: View {
                 Text(DegreesToStringInSelectedFormat(degrees: selectedCodableLocation!.coordinate.longitude, viewFormat: viewFormat))
             }
         }
+        .font(isPad ? .system(size: 30.0) : .body)
         .padding(.top, 5)
     }
     
@@ -139,12 +151,13 @@ struct LocationDBView: View {
         VStack {
             if codableLocations.count == 0 {
                 Text("You have not saved any locations yet.")
+                    .font(isPad ? .system(size: 25.0) : .body)
                     .multilineTextAlignment(.center)
                     .padding()
             } else {
                 Text("Saved Locations")
                     .padding(.top,5)
-                    .font(.headline)
+                    .font(isPad ? .system(size: 30.0) : .headline)
                     .bold()
                 VStack {
                     List {
@@ -153,6 +166,7 @@ struct LocationDBView: View {
                             Spacer()
                             Text(location.name)
                                 .tag(location.id)
+                                .font(isPad ? .system(size: 25.0) : .body)
                             Spacer()
                         }
                         .frame(height: 10)
@@ -172,10 +186,11 @@ struct LocationDBView: View {
     fileprivate var SaveLocationView: some View {
         VStack {
             Text("Name of Location:")
+                .font(isPad ? .system(size: 25.0) : .body)
             TextField("5 characters or more", text: $nameOfLocationToSave)
                 .focused($nameIsFocused)
-                .font(.body)
-                .frame(maxWidth: 200.0, alignment: .center) // Expands the frame and centers the content
+                .font(isPad ? .system(size: 25.0) : .body)
+                .frame(maxWidth: 300.0, alignment: .center) // Expands the frame and centers the content
                 .border(Color.gray)
                 .multilineTextAlignment(.center)
             if !isNameInLocationDatabase(name: nameOfLocationToSave) {
@@ -190,12 +205,14 @@ struct LocationDBView: View {
                     }
                 }, label: {
                     Text("Save with this name")
+                        .font(isPad ? .system(size: 25.0) : .body)
                 })
                 .buttonStyle(.bordered)
                 
             } else {
                 if locationInDatabaseWithThisNameHasSameCoordinates(loc: currentLocation, nameToSave: nameOfLocationToSave, cLocs: codableLocations) {
                     Text("Already in your database")
+                        .font(isPad ? .system(size: 30.0) : .body)
                         .multilineTextAlignment(.center)
                         .padding()
                 } else {
@@ -205,6 +222,7 @@ struct LocationDBView: View {
                         showSaveLocationView.toggle()
                     }, label: {
                         Text("Replace existing location.")
+                            .font(isPad ? .system(size: 30.0) : .body)
                             .foregroundColor(.red)
                     })
                     .buttonStyle(.bordered)
@@ -221,13 +239,19 @@ struct LocationDBView: View {
                     currentLocation = Location(coordinate: CLLocationCoordinate2D(latitude: selectedCodableLocation!.coordinate.latitude, longitude: selectedCodableLocation!.coordinate.longitude), name: currentLocation.name)
                     selectedCodableLocation = nil
                     isLocationAlreadyInDB = true
-                }, label: { Text("Use Selected Location") })
+                }, label: {
+                    Text("Use Selected Location")
+                        .font(isPad ? .system(size: 25.0) : .body)
+                })
                 .buttonStyle(.bordered)
                 HStack {
                     Button(action: {
                         selectedCodableLocation = nil
                         showSaveLocationView = false
-                    }, label: { Text("Clear") })
+                    }, label: {
+                        Text("Clear")
+                            .font(isPad ? .system(size: 25.0) : .body)
+                    })
                     .buttonStyle(.bordered)
                 }
             }
@@ -236,7 +260,10 @@ struct LocationDBView: View {
                     currentLocation = locationOnEntry
                     showSaveLocationView = true
                     selectedCodableLocation = nil
-                }, label: { Text("Restore") })
+                }, label: {
+                    Text("Restore")
+                        .font(isPad ? .system(size: 25.0) : .body)
+                })
                 .buttonStyle(.bordered)
             }
         }
@@ -245,7 +272,7 @@ struct LocationDBView: View {
     fileprivate var UserAlert: some View {
         VStack {
             Text(txtAlert)
-                .font(.caption)
+                .font(isPad ? .system(size: 25.0) : .caption)
                 .foregroundColor(.black)
                 .bold()
                 .multilineTextAlignment(.center)
@@ -256,7 +283,7 @@ struct LocationDBView: View {
                 }) {
                     Text("Ok")
                         .frame(maxWidth: .infinity)
-                        .font(.caption)
+                        .font(isPad ? .system(size: 25.0) : .caption)
                         .bold()
                         .padding()
                         .background(Color.blue)
