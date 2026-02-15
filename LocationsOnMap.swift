@@ -56,15 +56,7 @@ struct LocationsOnMap: View {
     @State private var strDistance: String = "0.0"
     @State private var locations = [Location]()
     
-    @State private var region_Rev0 = MapCameraPosition.region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.0090),
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        )
-    )
-    
     @State private var region: MKCoordinateRegion?
-
     init(Location1: Binding<Location>,
          Location2: Binding<Location>,
          latSpan: Double,
@@ -83,7 +75,6 @@ struct LocationsOnMap: View {
         _location2 = State(initialValue: loc2)
 
         _strDistance = State(initialValue: CalculateDistance(Loc1: loc1, Loc2: loc2))
-
         _region = State(initialValue:
             MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: (loc1.coordinate.latitude + loc2.coordinate.latitude) / 2.0,
@@ -98,13 +89,6 @@ struct LocationsOnMap: View {
     var body: some View {
         VStack {
             DraggableMapView(locations: $locations, strDistance: $strDistance, region: region)
-                .onAppear(perform: {
-                    region = MKCoordinateRegion(
-                            center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
-                            span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
-                        )
-
-                })
             DistanceView
             HintView
         }
@@ -202,47 +186,6 @@ struct LocationsOnMap: View {
 
 
 }
-
-/*
-struct CustomDraggableAnnotationView: View {
-    
-    @Binding var location: Location
-    
-    var mapProxy: MapProxy? // Pass the map proxy here
-    
-    var body: some View {
-        if location.name == "Location 1" {
-            Image(systemName: "pin.fill")
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Circle().fill(.blue).shadow(radius: 4))
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if let newCoordinate = mapProxy?.convert(value.location, from: .local) {
-                                location.coordinate = newCoordinate
-                            }
-                        }
-                )
-
-        } else {
-            Image(systemName: "pin.fill")
-                .foregroundColor(.white)
-                .padding(10)
-                .background(Circle().fill(.red).shadow(radius: 4))
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if let newCoordinate = mapProxy?.convert(value.location, from: .local) {
-                                location.coordinate = newCoordinate
-                            }
-                        }
-                )
-        }
-    }
-    
-}
-*/
 
 #Preview {
    @Previewable @State var Loc1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37.5890, longitude: -122.5890), name: "Location 1")

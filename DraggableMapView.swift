@@ -104,10 +104,13 @@ struct DraggableMapView: UIViewRepresentable {
     init(locations: Binding<[Location]>, strDistance: Binding<String>, region: MKCoordinateRegion? = nil) {
         _locations = locations
         _strDistance = strDistance
+        self.region = region
+        /*
         self.region = MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
-            span: MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
+            span: MKCoordinateSpan(latitudeDelta: 2.5, longitudeDelta: 2.5)
         )
+        */
     }
     
     fileprivate func calcLatCenter() -> CLLocationDegrees {
@@ -151,5 +154,60 @@ struct DraggableMapView: UIViewRepresentable {
 /*
 #Preview {
     DraggableMapView()
+}
+*/
+
+/*
+struct DraggableMapView_Rev0: UIViewRepresentable {
+
+    @Binding var locations: [Location]
+    @Binding var strDistance: String
+    var region: MKCoordinateRegion?
+    
+    init(locations: Binding<[Location]>, strDistance: Binding<String>, region: MKCoordinateRegion? = nil) {
+        _locations = locations
+        _strDistance = strDistance
+        self.region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: calcLatCenter(), longitude: calcLongCenter()),
+            span: MKCoordinateSpan(latitudeDelta: 2.5, longitudeDelta: 2.5)
+        )
+    }
+    
+    fileprivate func calcLatCenter() -> CLLocationDegrees {
+        let center = (locations[0].coordinate.latitude + locations[1].coordinate.latitude)/2.0
+        return center
+    }
+
+    fileprivate func calcLongCenter() -> CLLocationDegrees {
+        let center = (locations[0].coordinate.longitude + locations[1].coordinate.longitude) / 2.0
+        return center
+    }
+
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView()
+        mapView.delegate = context.coordinator
+        mapView.region = region!
+        mapView.addAnnotations(locations.map { context.coordinator.annotation(for: $0) })
+        return mapView
+    }
+    
+    /*
+    func convertMapCameraPositionToMKCoordinateRegion(region: MapCameraPosition) -> MKCoordinateRegion {
+        let lat = region.camera?.centerCoordinate.latitude ?? 0.0
+        let long = region.camera?.centerCoordinate.longitude ?? 0.0
+        let center = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        let span = MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.2)
+        let convertedRegion = MKCoordinateRegion(center: center, span: span)
+        return convertedRegion
+    }
+    */
+    
+    func updateUIView(_ mapView: MKMapView, context: Context) {
+        //TODO: Update the locations here using mapView.annotations[0].coordinate and ... [1].coordinate
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
 }
 */

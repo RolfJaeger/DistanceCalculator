@@ -120,49 +120,69 @@ struct DistanceView: View {
                 .bold()
                 .padding(.bottom, 0)
             DistanceView
-            Button(action: {
-                if let userLocation = locationManager.lastKnownLocation {
-                    Location1.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
-                    Location1.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
-                }
-            }, label: {
-                Text("Location 1")
-                    .font(.title2)
-                    .bold()
-            })
-            .buttonStyle(.bordered)
-            .padding(.top, 10)
-            .padding(.bottom, 5)
+            HStack {
+                Button(action: {
+                    if let userLocation = locationManager.lastKnownLocation {
+                        Location1.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
+                        Location1.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
+                    }
+                }, label: {
+                    Text("Location 1")
+                        .font(.title2)
+                        .bold()
+                })
+                .buttonStyle(.bordered)
+                .padding(.top, 10)
+                .padding(.bottom, 5)
+                NavigationLink(
+                    destination:
+                        LocationDBView(viewFormat: $viewFormat, currentLocation: $Location1),
+                    label: {
+                        Image(systemName: "bookmark")
+                })
+            }
             Location1Details
-            Button(action: {
-                if let userLocation = locationManager.lastKnownLocation {
-                    Location2.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
-                    Location2.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
-                }
-            }, label: {
-                Text("Location 2")
-                    .font(.title2)
-                    .bold()
-            })
-            .buttonStyle(.bordered)
-            .padding(.top, 10)
-            .padding(.bottom, 5)
+            HStack {
+                Button(action: {
+                    if let userLocation = locationManager.lastKnownLocation {
+                        Location2.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
+                        Location2.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
+                    }
+                }, label: {
+                    Text("Location 2")
+                        .font(.title2)
+                        .bold()
+                })
+                .buttonStyle(.bordered)
+                .padding(.top, 10)
+                .padding(.bottom, 5)
+                NavigationLink(
+                    destination:
+                        LocationDBView(viewFormat: $viewFormat, currentLocation: $Location2),
+                    label: {
+                        Image(systemName: "bookmark")
+                })
+            }
+            
             Location2Details
             
             HintView
             Spacer()
-            NavigationLink(
-                destination:
-                    LocationsOnMap(
-                        Location1: $Location1,Location2: $Location2,
-                        latSpan: calcLatDelta(),
-                        longSpan: calcLongDelta()
-                    ),
-                label: {
-                Text("Show Locations on Map")
-                    .font(.title3)
-                    .padding(.top, 20)
-            })
+            //Make this disappear when location detail is shown
+            if isNoDetailViewVisible() {
+                NavigationLink(
+                    destination:
+                        LocationsOnMap(
+                            Location1: $Location1,Location2: $Location2,
+                            latSpan: calcLatDelta(),
+                            longSpan: calcLongDelta()
+                        ),
+                    label: {
+                        Text("Show Locations on Map")
+                            .font(.title3)
+                            .padding(.top, 20)
+                    })
+            }
 
         }
     }
@@ -883,6 +903,14 @@ struct DistanceView: View {
 
     }
     
+    fileprivate func isNoDetailViewVisible() -> Bool {
+        return
+            !loc1LatViewVisible &&
+        !loc1LongViewVisible &&
+        !loc2LatViewVisible &&
+        !loc2LongViewVisible
+    }
+    
     fileprivate func SetViewVisibility(viewName: ViewName) {
         loc1LatViewVisible = false
         loc1LongViewVisible = false
@@ -909,12 +937,12 @@ struct DistanceView: View {
     }
     
     fileprivate func calcLatDelta() -> CLLocationDegrees {
-        let delta = abs(Location1.coordinate.latitude - Location2.coordinate.latitude) * 1.1
+        let delta = abs(Location1.coordinate.latitude - Location2.coordinate.latitude) * 3
         return delta
     }
 
     fileprivate func calcLongDelta() -> CLLocationDegrees {
-        let delta = abs(Location1.coordinate.longitude - Location2.coordinate.longitude) * 1.1
+        let delta = abs(Location1.coordinate.longitude - Location2.coordinate.longitude) * 3 //1.1
         return delta
     }
 

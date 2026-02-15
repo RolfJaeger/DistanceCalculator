@@ -39,7 +39,8 @@ struct Location: Identifiable, Hashable, Equatable {
     }
 }
 
-struct CodableLocation: Codable, Hashable {
+struct CodableLocation: Identifiable, Codable, Hashable {
+    let id = UUID()
     var coordinate: CodableCoordinate
     var name: String
     static func ==(lhs: CodableLocation, rhs: CodableLocation) -> Bool {
