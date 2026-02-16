@@ -69,6 +69,11 @@ struct CodableCoordinate: Codable {
     }
 }
 
+enum LatLong {
+    case Latitude
+    case Longitude
+}
+
 enum ViewName: String {
     case Loc1Lat
     case Loc1Long
@@ -175,6 +180,26 @@ func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: Vie
     return strDegrees
 }
 
+func DegreesToStringInSelectedFormat(location: Location, latLong: LatLong, viewFormat: ViewFormat) -> String {
+    var strDegrees: String
+    var degrees: CLLocationDegrees
+    if latLong == .Latitude {
+        degrees = location.coordinate.latitude
+    } else {
+        degrees = location.coordinate.longitude
+    }
+    switch viewFormat {
+    case .DMS:
+        strDegrees = DegreesInDMS(degrees: degrees)
+    case .DDM:
+        strDegrees = DecimalDegrees(degrees: degrees)
+    case .Raymarine:
+        strDegrees = DegreesInRaymarineFormat(degrees: degrees)
+    }
+    return strDegrees
+}
+
+
 func DegreesInDMS(degrees: CLLocationDegrees) -> String {
     let degreesWithoutSign = degrees < 0 ? -degrees : degrees
     var d = Int(degreesWithoutSign)
@@ -201,7 +226,6 @@ func DecimalDegrees(degrees: CLLocationDegrees) -> String {
     return "\(decimalDegrees)\u{00B0}"
 }
 
-
 func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
     var d = Int(degrees)
     var fractualMinutes = Double((degrees - Double(d)) * 60).rounded(toPlaces: 3)
@@ -214,5 +238,62 @@ func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
     return "\(d)\u{00B0} \(fractualMinutes)'"
 }
 
+
+func extractTenth(degrees: CLLocationDegrees) -> String {
+    //print("Degrees in extractTenth: \(String(degrees))")
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 1 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let tensIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 1, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[tensIndex!])
+    } else {
+        return "0"
+    }
+}
+
+func extractHundredth(degrees: CLLocationDegrees) -> String {
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 2 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let hundredsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 2, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[hundredsIndex!])
+    } else {
+        return "0"
+    }
+}
+
+func extractThousandth(degrees: CLLocationDegrees) -> String {
+    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 3 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let thousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 3, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[thousandsIndex!])
+    } else {
+        return "0"
+    }
+}
+
+func extractTenThousandth(degrees: CLLocationDegrees) -> String {
+    let degreesRounded = Double(degrees).rounded(toPlaces: 4)
+    let strDegrees = String(degreesRounded)
+    let periodIndex = strDegrees.firstIndex(of: ".")
+    //NOTE: CLLocationsDegrees values ALWAYS contain a period
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 4 {
+        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
+        let tenthousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 4, limitedBy: strDegrees.endIndex)
+        return String(strDegrees[tenthousandsIndex!])
+    } else {
+        return "0"
+    }
+}
 
 

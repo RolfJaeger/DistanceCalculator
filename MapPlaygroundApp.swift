@@ -11,15 +11,14 @@ import CoreLocation
 @main
 struct MapPlaygroundApp: App {
 
-    //var viewFormat: ViewFormat = .Raymarine
-    @State var viewFormat: ViewFormat = .Raymarine
-    @State var location: Location = Location(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122.0), name: "Test Loc")
-    
+    @State var location: Location = Location(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -122), name: "Location 1")
+    //let locObj = LocationObject()
     var body: some Scene {
         WindowGroup {
-            DistanceView(viewFormat: viewFormat)
+            //DeviceSwitch()
             //TestOfDraggableMapView()
-            //LocationDBView(viewFormat: $viewFormat, currentLocation: $location)
+            //LocationDBView(location: $location)
+            LocationsOnMap_New()
         }
     }
 }

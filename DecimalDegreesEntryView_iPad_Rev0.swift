@@ -1,19 +1,14 @@
 //
-//  DecimalDegreesEntryView.swift
+//  DecimalDegreesEntryView_iPad.swift
 //  MapPlayground
 //
-//  Created by Rolf Jaeger on 1/14/26.
+//  Created by Rolf Jaeger on 2/15/26.
 //
 
 import SwiftUI
 import CoreLocation
 
-/*
-This view supports the formats:
- # DDM: Decimal Degrees, e.g. 37.389°
-*/
-
-struct DecimalDegreesEntryView: View {
+struct DecimalDegreesEntryView_iPad_Rev0: View {
     
     var hemisphere: String
     var maxDegrees: Int
@@ -92,28 +87,14 @@ struct DecimalDegreesEntryView: View {
     
     var body: some View {
         VStack {
-            MainView
+            MainView_iPad
         }
         .onAppear() {
         }
         .ignoresSafeArea(.keyboard)
     }
     
-    fileprivate var MainView: some View {
-        VStack(alignment: .center) {
-            VStack {
-                DetailsView
-                PlusMinus
-                    .padding(.top,-10)
-            }
-            .font(.largeTitle)
-            .bold()
-            Instructions
-        }
-        .frame(maxWidth: .infinity)
-    }
-    
-    fileprivate var Instructions: some View {
+    fileprivate var Instructions_iPad: some View {
         VStack {
             Text("Tap and scroll")
             HStack {
@@ -124,10 +105,27 @@ struct DecimalDegreesEntryView: View {
                 Text("button.")
             }
         }
-        .font(.footnote)
+        .font(Font.system(size: hintFont, weight: .regular, design: .default))
+    }
+
+    fileprivate var MainView_iPad: some View {
+        VStack(alignment: .center) {
+            VStack {
+                DetailsView_iPad
+                PlusMinus_iPad
+            }
+            .font(Font.system(size: dataFont, weight: .regular, design: .default))
+            .bold()
+            Instructions_iPad
+                .font(Font.system(size: hintFont, weight: .regular, design: .default))
+        }
+        .frame(maxWidth: .infinity)
+        .onAppear {
+            
+        }
     }
     
-    fileprivate var DetailsView: some View {
+    fileprivate var DetailsView_iPad: some View {
         HStack {
             if !showDegreesPicker {
                 Text("\(Int(decimalDegrees))")
@@ -136,20 +134,24 @@ struct DecimalDegreesEntryView: View {
                         plusMinusTarget = .DEGREES
                     }
             } else {
-                Picker("", selection: $degrees) {
-                    ForEach(0...maxDegrees, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                VStack {
+                    Picker("", selection: $degrees) {
+                        ForEach(0...maxDegrees, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
                     }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 100, height: 100)
-                .onChange(of: degrees) {
-                    updateDegreesValue()
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 120, height: 100)
+                    .onChange(of: degrees) {
+                        updateDegreesValue()
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
                 }
             }
-
+            
             Text(".")
 
             if !showTenthPicker {
@@ -160,17 +162,21 @@ struct DecimalDegreesEntryView: View {
                         plusMinusTarget = .TENTH
                     }
             } else {
-                Picker("", selection: $degreeTenth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                VStack {
+                    Picker("", selection: $degreeTenth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
                     }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 100)
-                .onAppear {
-                    degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
                 }
                 .onChange(of: degreeTenth) {
                     updateDegreesValueDecimalDegreesFormat()
@@ -185,20 +191,24 @@ struct DecimalDegreesEntryView: View {
                         plusMinusTarget = .HUNDREDTH
                     }
             } else {
-                Picker("", selection: $degreeHundredth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                VStack {
+                    Picker("", selection: $degreeHundredth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
                     }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 100)
-                .onAppear {
-                    degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeHundredth) {
-                    updateDegreesValueDecimalDegreesFormat()
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeHundredth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
                 }
             }
             
@@ -210,23 +220,27 @@ struct DecimalDegreesEntryView: View {
                         plusMinusTarget = .THOUSANDTH
                     }
             } else {
-                Picker("", selection: $degreeThousandth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                VStack {
+                    Picker("", selection: $degreeThousandth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
                     }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 90)
-                .onAppear {
-                    degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeThousandth) {
-                    updateDegreesValueDecimalDegreesFormat()
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeThousandth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
                 }
             }
-
+            
             if !showTenThousandthPicker {
                 Text("\(degreeTenThousandth)")
                     .padding(.leading, -5)
@@ -235,27 +249,31 @@ struct DecimalDegreesEntryView: View {
                         plusMinusTarget = .TENTHOUSANDTH
                     }
             } else {
-                Picker("", selection: $degreeTenThousandth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                VStack {
+                    Picker("", selection: $degreeTenThousandth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                        }
                     }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 90)
-                .onAppear {
-                    degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeTenThousandth) {
-                    updateDegreesValueDecimalDegreesFormat()
+                    .pickerStyle(.wheel)
+                    .scaleEffect(2.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeTenThousandth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                    Text(" ")
+                        .font(.system(size: 30, weight: .bold))
                 }
             }
 
             Text("°")
 
         }
-        .font(Font.system(size: 40, weight: .regular, design: .default))
+        .font(Font.system(size: 80, weight: .regular, design: .default))
         .padding(.top, 0)
         .padding(.bottom,5)
     }
@@ -333,23 +351,24 @@ struct DecimalDegreesEntryView: View {
             }
         }
     }
-    fileprivate var PlusMinus: some View {
+    
+    fileprivate var PlusMinus_iPad: some View {
         HStack {
             Button(action: {
                 IncreaseValue()
             }, label: {
                 Image(systemName: "plus.square")
+                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
             Button(action: {
                 DecreaseValue()
             }, label: {
                 Image(systemName: "minus.square")
+                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
         }
-        .padding(.top, 10)
-        .padding(.bottom, 10)
     }
     
     fileprivate func updateDegreesValue() {
@@ -531,7 +550,6 @@ struct DecimalDegreesEntryView: View {
 
 #Preview {
     @Previewable @State var tmp = CLLocationDegrees(floatLiteral: 120.5890)
-    @Previewable @State var hemisphere: String = "W"    
-    DecimalDegreesEntryView(hemisphere: hemisphere, locDegrees: $tmp)
+    @Previewable @State var hemisphere: String = "W"
+    DecimalDegreesEntryView_iPad_Rev0(hemisphere: hemisphere, locDegrees: $tmp)
 }
-

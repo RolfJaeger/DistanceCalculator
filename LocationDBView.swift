@@ -10,9 +10,10 @@ import CoreLocation
 
 struct LocationDBView: View {
     
-    @Binding var viewFormat: ViewFormat
-    @Binding var currentLocation: Location
+    @Binding var location: Location
+    @State var currentLocation = Location(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0), name: "Test")
 
+    @State var viewFormat: ViewFormat = .DDM
     @State var showAlert = false
     @State var txtAlert = ""
     
@@ -39,10 +40,9 @@ struct LocationDBView: View {
         }
     }
     
-    init(viewFormat: Binding<ViewFormat>, currentLocation: Binding<Location>) {
-        _viewFormat = viewFormat
-        _currentLocation = currentLocation
-        locationOnEntry = currentLocation.wrappedValue
+    init(location: Binding<Location>) {
+        _location = location
+        locationOnEntry = location.wrappedValue
         _codableLocations = State(initialValue: restoreSavedLocations())
         // Use for debugging GUI
         //_codableLocations = State(initialValue: initializeLongLocationsList())
@@ -66,6 +66,9 @@ struct LocationDBView: View {
             SavedLocationsView
             ControlButtons
             Spacer()
+        }
+        .onAppear {
+            currentLocation = location
         }
     }
     
@@ -109,8 +112,8 @@ struct LocationDBView: View {
             Text("Current Location:")
                 .bold()
             HStack {
-                Text(DegreesToStringInSelectedFormat(degrees: currentLocation.coordinate.latitude, viewFormat: viewFormat))
-                Text(DegreesToStringInSelectedFormat(degrees: currentLocation.coordinate.longitude, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(location: currentLocation, latLong: .Latitude, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(location: currentLocation, latLong: .Longitude, viewFormat: viewFormat))
             }
         }
         .font(isPad ? .system(size: 30.0) : .body)
@@ -446,7 +449,6 @@ struct LocationDBView: View {
 }
 
 #Preview {
-    @Previewable @State var viewFormat: ViewFormat = .Raymarine
-    @Previewable @State var location: Location = Location(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: -120.0), name: "Test Loc")
-    LocationDBView(viewFormat: $viewFormat, currentLocation: $location)
+    @Previewable @State var location: Location = Location(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: 122.0), name: "Test Loc")
+    LocationDBView(location: $location)
 }

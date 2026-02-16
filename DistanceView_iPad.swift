@@ -1,38 +1,25 @@
 //
-//  DistanceView.swift
+//  DistanceView_iPad.swift
 //  MapPlayground
 //
-//  Created by Rolf Jaeger on 12/18/25.
+//  Created by Rolf Jaeger on 2/15/26.
 //
-
-/*
-TODO List:
- - Show alert when user taps 'Hemisphere'
- */
-
-/*
-Expected values (for changes in Latitude):
- - Degrees | Decimal Minutes (Raymarine) View:
-    0.001 minutes = 0.001 nm
- - Degrees | Minutes | Seconds (DMS) View:
-    1 second = 1/60 of 1 minute = 1/60 nm = 0.0166 nm
- - Decimal Degrees View:
-    0.001 degrees = 1/1000 of 60nm = 0.06 nm
- */
 
 import SwiftUI
 import CoreLocation
 
-struct DistanceView: View {
+struct DistanceView_iPad: View {
     
     @ObservedObject var locationManager = LocationManager()
     
     //@Binding var Location1: Location
     @State var Location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0), name: "Location 1")
     @State var Location2 = Location(coordinate: CLLocationCoordinate2D(latitude: 0.0, longitude: 0.0), name: "Location 2")
-        
+
     @State var viewFormat: ViewFormat
 
+    @State var Loc1Lat: Double = 0
+    
     @State var loc1LatViewVisible = false
     @State var loc1LongViewVisible = false
     @State var loc2LatViewVisible = false
@@ -91,7 +78,7 @@ struct DistanceView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                MainView
+                MainView_iPad
                 if showDialog {
                     UserDialog
                 }
@@ -99,85 +86,47 @@ struct DistanceView: View {
         }
     }
     
-    fileprivate var MainView: some View {
+    fileprivate var MainView_iPad: some View {
         VStack {
             Text("Plotting Helper")
+                .font(Font.system(size: 60, weight: .bold, design: .default))
                 .font(.title)
                 .bold()
                 .padding()
-            FormatView
+            FormatView_iPad
                 .padding(.bottom, 10)
             Text("Distance")
-                .font(.title2)
+                .font(Font.system(size: 40, weight: .bold, design: .default))
                 .bold()
                 .padding(.bottom, 0)
-            DistanceView
-            HStack {
-                Button(action: {
-                    if let userLocation = locationManager.lastKnownLocation {
-                        Location1.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
-                        Location1.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
-                    }
-                }, label: {
-                    Text("Location 1")
-                        .font(.title2)
-                        .bold()
-                })
-                .buttonStyle(.bordered)
-                .padding(.top, 10)
-                .padding(.bottom, 5)
-                NavigationLink(
-                    destination:
-                        LocationDBView(location: $Location1),
-                    label: {
-                        Image(systemName: "bookmark")
-                })
-            }
-            Location1Details
-            HStack {
-                Button(action: {
-                    if let userLocation = locationManager.lastKnownLocation {
-                        Location2.coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
-                        Location2.coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
-                    }
-                }, label: {
-                    Text("Location 2")
-                        .font(.title2)
-                        .bold()
-                })
-                .buttonStyle(.bordered)
-                .padding(.top, 10)
-                .padding(.bottom, 5)
-                NavigationLink(
-                    destination:
-                        LocationDBView(location: $Location2),
-                    label: {
-                        Image(systemName: "bookmark")
-                })
-            }
-            Location2Details
-            
-            HintView
+            DistanceView_iPad
+            LocationButtons(location: $Location1, viewFormat: viewFormat)
+            Location1Details_iPad
+
+            LocationButtons(location: $Location2, viewFormat: viewFormat)
+            Location2Details_iPad
+    
+            HintView_iPad
             Spacer()
-            //Make this disappear when location detail is shown
             if isNoDetailViewVisible() {
                 NavigationLink(
                     destination:
                         LocationsOnMap(
                             Location1: $Location1,Location2: $Location2,
-                            latSpan: calcLatDelta(), longSpan: calcLongDelta()
+                            latSpan: calcLatDelta(),
+                            longSpan: calcLongDelta()
                         ),
                     label: {
                         Text("Show Locations on Map")
-                            .font(.title3)
+                            .font(Font.system(size: 30, weight: .bold, design: .default))
                             .padding(.top, 20)
+                            .padding(.bottom, 20)
                     })
             }
-
         }
     }
 
-    fileprivate var HintView: some View {
+    fileprivate var HintView_iPad: some View {
         VStack {
             if !loc1LatViewVisible && !loc1LongViewVisible && !loc2LatViewVisible && !loc2LongViewVisible {
                 if hintVisible {
@@ -188,12 +137,14 @@ struct DistanceView: View {
                 }
             }
         }
+        .font(Font.system(size: hintFont, weight: .regular, design: .default))
     }
     
-    fileprivate var FormatView: some View {
+    fileprivate var FormatView_iPad: some View {
         VStack {
             VStack {
                 Text("Location Format")
+                    .font(Font.system(size: subtitleFont, weight: .bold, design: .default))
                     .bold()
                 switch viewFormat {
                 case .DMS:
@@ -204,6 +155,7 @@ struct DistanceView: View {
                     Text("Degrees | Decimal Minutes")
                 }
             }
+            .font(Font.system(size: subtitleFont, weight: .regular, design: .default))
             if !loc1LatViewVisible && !loc1LongViewVisible && !loc2LatViewVisible && !loc2LongViewVisible {
                 Button(action: {
                     switch viewFormat {
@@ -214,13 +166,16 @@ struct DistanceView: View {
                     case .Raymarine:
                         viewFormat = .DDM
                     }
-                }, label: {Text(txtSwitchFormat)})
+                }, label: {
+                    Text(txtSwitchFormat)
+                        .font(Font.system(size: buttonFont - 10.0, weight: .regular, design: .default))
+                })
                 .buttonStyle(.bordered)
             }
         }
     }
 
-    fileprivate var Loc1Minimized: some View {
+    fileprivate var Loc1Minimized_iPad_Rev0: some View {
         HStack {
             Spacer()
             if Location1.coordinate.latitude < 0 {
@@ -241,16 +196,42 @@ struct DistanceView: View {
             Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.longitude, viewFormat: viewFormat))
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc1Long)
-                    
                 }
             Spacer()
         }
-        .font(.title2)
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .lineLimit(1)
         .minimumScaleFactor(0.5)
     }
     
-    fileprivate var TopButtons: some View {
+    fileprivate var Loc1Minimized_iPad: some View {
+        HStack {
+            if Location1.coordinate.latitude > 0 {
+                Text("N")
+            } else {
+                Text("S")
+            }
+            LocationInfoMinimized(location: $Location1, viewFormat: viewFormat, latLong: .Latitude)
+                .onTapGesture {
+                    SetViewVisibility(viewName: .Loc1Lat)
+                }
+            Text(" | ")
+            if Location1.coordinate.longitude > 0 {
+                Text("E")
+            } else {
+                Text("W")
+            }
+            LocationInfoMinimized(location: $Location1, viewFormat: viewFormat, latLong: .Longitude)
+                .onTapGesture {
+                    SetViewVisibility(viewName: .Loc1Long)
+                }
+        }
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
+        .lineLimit(1)
+        .minimumScaleFactor(0.5)
+    }
+    
+    fileprivate var TopButtons_iPad: some View {
         HStack {
             Spacer()
             Button(action: {
@@ -258,9 +239,10 @@ struct DistanceView: View {
             }, label: {
                 Text("Hemisphere")
             })
+            .font(Font.system(size: 25, weight: .regular, design: .default))
             .buttonStyle(.bordered)
             Text(" | ")
-            MinimizeButton
+            MinimizeButton_iPad
             Spacer()
         }
         .padding(.top, 10)
@@ -306,36 +288,41 @@ struct DistanceView: View {
         }
     }
     
-    fileprivate var Loc1LatExpanded: some View {
+    fileprivate var Loc1LatExpanded_iPad: some View {
         VStack {
-            TopButtons
+            TopButtons_iPad
             HStack {
                 Spacer()
                 NorthSouth_Loc1
                 Text(DegreesToStringInSelectedFormat(degrees: Location1.coordinate.latitude, viewFormat: viewFormat))
                 Spacer()
             }
-            .font(.title)
             switch viewFormat {
             case .DMS:
                 DMSEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
-                    .frame(height: 180)
+                DecimalDegreesEntryView_iPad(hemisphere: NortSouthLoc1, location: $Location1, latLong: .Latitude)
+                    .frame(height: 280)
+                //TODO: Binding to properties is not working. Must bind to the objects themselves.
+                /*
+                DecimalDegreesEntryView_iPad(hemisphere: NortSouthLoc1, locDegrees: $Loc1Lat)
+                    .frame(height: 280)
+                 */
             case .Raymarine:
                 RaymarineFormatEntryView(hemisphere: NortSouthLoc1, locDegrees: $Location1.coordinate.latitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             }
         }
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
         .padding(.leading, 5)
         .padding(.trailing, 5)
     }
     
-    fileprivate var Loc1LongExpanded: some View {
+    fileprivate var Loc1LongExpanded_iPad: some View {
         VStack {
-            TopButtons
+            TopButtons_iPad
             HStack {
                 Spacer()
                 EastWest_Loc1
@@ -345,65 +332,71 @@ struct DistanceView: View {
                     }
                 Spacer()
             }
-            .font(.title)
             switch viewFormat {
             case .DMS:
                 DMSEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
-                    .frame(height: 180)
+                DecimalDegreesEntryView_iPad(hemisphere: EastWestLoc1, location: $Location1, latLong: .Longitude)
+                    .frame(height: 280)
             case .Raymarine:
                 RaymarineFormatEntryView(hemisphere: EastWestLoc1, locDegrees: $Location1.coordinate.longitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             }
         }
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
         .padding(.leading, 5)
         .padding(.trailing, 5)
     }
     
-    fileprivate var Location1Details: some View {
+    fileprivate var Location1Details_iPad: some View {
         VStack {
             HStack {
                 if !loc1LatViewVisible && !loc1LongViewVisible {
-                    Loc1Minimized
+                    Loc1Minimized_iPad
                 }
             }
             if loc1LatViewVisible {
-                Loc1LatExpanded
+                Loc1LatExpanded_iPad
             }
             
             if loc1LongViewVisible {
-                Loc1LongExpanded
+                Loc1LongExpanded_iPad
             }
         }
     }
 
-    fileprivate var Loc2Minimized: some View {
+    fileprivate var Loc2Minimized_iPad: some View {
         HStack {
-            Spacer()
-            NorthSouth_Loc2
-            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
+            if Location2.coordinate.latitude > 0 {
+                Text("N")
+            } else {
+                Text("S")
+            }
+            LocationInfoMinimized(location: $Location2, viewFormat: viewFormat, latLong: .Latitude)
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Lat)
                 }
             Text(" | ")
-            EastWest_Loc2
-            Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
+            if Location2.coordinate.longitude > 0 {
+                Text("E")
+            } else {
+                Text("W")
+            }
+            LocationInfoMinimized(location: $Location2, viewFormat: viewFormat, latLong: .Longitude)
                 .onTapGesture {
                     SetViewVisibility(viewName: .Loc2Long)
                 }
-            Spacer()
         }
-        .font(.title2)
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .lineLimit(1)
         .minimumScaleFactor(0.5)
     }
 
-    fileprivate var Loc2LatExpanded: some View {
+    fileprivate var Loc2LatExpanded_iPad: some View {
         VStack {
-            TopButtons
+            TopButtons_iPad
             HStack {
                 NorthSouth_Loc2
                 Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.latitude, viewFormat: viewFormat))
@@ -411,27 +404,27 @@ struct DistanceView: View {
                         loc2LatViewVisible = false
                     }
             }
-            .font(.title)
             switch viewFormat {
             case .DMS:
                 DMSEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
-                    .frame(height: 180)
+                DecimalDegreesEntryView_iPad(hemisphere: NortSouthLoc2,location: $Location1, latLong: .Latitude)
+                    .frame(height: 280)
             case .Raymarine:
                 RaymarineFormatEntryView(hemisphere: NortSouthLoc2, locDegrees: $Location2.coordinate.latitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             }
         }
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
         .padding(.leading, 5)
         .padding(.trailing, 5)
     }
 
-    fileprivate var Loc2LongExpanded: some View {
+    fileprivate var Loc2LongExpanded_iPad: some View {
         VStack {
-            TopButtons
+            TopButtons_iPad
             HStack {
                 EastWest_Loc2
                 Text(DegreesToStringInSelectedFormat(degrees: Location2.coordinate.longitude, viewFormat: viewFormat))
@@ -439,51 +432,51 @@ struct DistanceView: View {
                         loc2LongViewVisible = false
                     }
             }
-            .font(.title)
             switch viewFormat {
             case .DMS:
                 DMSEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             case .DDM:
-                DecimalDegreesEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
-                    .frame(height: 180)
+                DecimalDegreesEntryView_iPad(hemisphere: EastWestLoc2,location: $Location1, latLong: .Longitude)
+                    .frame(height: 280)
             case .Raymarine:
                 RaymarineFormatEntryView(hemisphere: EastWestLoc2, locDegrees: $Location2.coordinate.longitude)
-                    .frame(height: 180)
+                    .frame(height: 280)
             }
         }
+        .font(Font.system(size: dataFont, weight: .regular, design: .default))
         .border(.primary, width: 2)
         .padding(.leading, 5)
         .padding(.trailing, 5)
     }
 
-    fileprivate var Location2Details: some View {
+    fileprivate var Location2Details_iPad: some View {
         VStack {
             HStack {
                 if !loc2LatViewVisible && !loc2LongViewVisible {
-                    Loc2Minimized
+                    Loc2Minimized_iPad
                 }
             }
             if loc2LatViewVisible {
-                Loc2LatExpanded
+                Loc2LatExpanded_iPad
             }
             if loc2LongViewVisible {
-                Loc2LongExpanded
+                Loc2LongExpanded_iPad
             }
         }
     }
 
-    fileprivate var DistanceView: some View {
+    fileprivate var DistanceView_iPad: some View {
         HStack {
             Spacer()
             Text(CalculateDistance(Loc1: Location1, Loc2: Location2))
             Text("nm")
             Spacer()
         }
-        .font(.title)
+        .font(Font.system(size: 40, weight: .regular, design: .default))
     }
 
-    fileprivate var MinimizeButton: some View {
+    fileprivate var MinimizeButton_iPad: some View {
         VStack {
             if loc1LatViewVisible || loc1LongViewVisible || loc2LatViewVisible || loc2LongViewVisible {
                 Button(action: {
@@ -494,6 +487,7 @@ struct DistanceView: View {
                 }, label: {
                     Text("Minimize")
                 })
+                .font(Font.system(size: 25, weight: .regular, design: .default))
                 .buttonStyle(.bordered)
             }
         }
@@ -605,6 +599,5 @@ struct DistanceView: View {
 }
 
 #Preview {
-    DistanceView()
+    DistanceView_iPad()
 }
-
