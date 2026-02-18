@@ -11,6 +11,9 @@ struct LocationsOnMap_New: View {
     
     @StateObject private var locObject = LocationObject()
     
+    @State private var showDataEntryView = false
+    @State private var locIndex = 0
+    
     var body: some View {
         VStack {
             Text("Plotting Helper")
@@ -23,14 +26,23 @@ struct LocationsOnMap_New: View {
                 .padding(.bottom,5)
             Text("Location 1")
                 .font(Font.system(size: 25, weight: .regular, design: .default))
-
                 .bold()
             HStack {
                 Text(locObject.getNorthSouth(0))
                 Text("\(locObject.getLatitute(0))")
+                    .onTapGesture {
+                        showDataEntryView = true
+                        locIndex = 0
+                        locObject.latLong = .Latitude
+                    }
                 Text(" | ")
                 Text(locObject.getEastWest(0))
                 Text("\(locObject.getLongitute(0))")
+                    .onTapGesture {
+                        showDataEntryView = true
+                        locIndex = 0
+                        locObject.latLong = .Longitude
+                    }
             }
             .font(Font.system(size: 25, weight: .regular, design: .default))
 
@@ -39,11 +51,34 @@ struct LocationsOnMap_New: View {
             HStack {
                 Text(locObject.getNorthSouth(1))
                 Text("\(locObject.getLatitute(1))")
+                    .onTapGesture {
+                        showDataEntryView = true
+                        locIndex = 1
+                        locObject.latLong = .Latitude
+                    }
                 Text(" | ")
                 Text(locObject.getEastWest(1))
                 Text("\(locObject.getLongitute(1))")
+                    .onTapGesture {
+                        showDataEntryView = true
+                        locIndex = 1
+                        locObject.latLong = .Longitude
+                    }
             }
             .font(Font.system(size: 25, weight: .regular, design: .default))
+            if showDataEntryView {
+                VStack {
+                    switch locObject.viewFormat {
+                    case .DMS:
+                        DecimalDegreesEntryView_New(locObj: locObject, locIndex: locIndex)
+                    case .DDM:
+                        DMSEntryView_New(locObj: locObject, locIndex: locIndex)
+                    case .Raymarine:
+                        RaymarineFormatEntryView_New(locObj: locObject, locIndex: locIndex)
+                    }
+                }
+                .frame(height: 75)
+            }
             MapView_New(locObj: locObject)
         }
         .font(Font.system(size: 25, weight: .regular, design: .default))
@@ -52,5 +87,6 @@ struct LocationsOnMap_New: View {
 }
 
 #Preview {
+    let locObj = LocationObject()
     LocationsOnMap_New()
 }

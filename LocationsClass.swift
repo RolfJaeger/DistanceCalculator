@@ -17,6 +17,9 @@ class LocationObject: ObservableObject {
     @Published var locations: [Location] = [Location]()
     @Published var region: MKCoordinateRegion?
     @Published var viewFormat: ViewFormat
+    @Published var hemisphere: String = "N"
+    @Published var latLong: LatLong = .Latitude
+    @Published var maxDegrees = 180
     
     init() {
         Location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37, longitude: -122), name: "Location 1")

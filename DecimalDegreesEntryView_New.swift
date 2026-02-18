@@ -1,29 +1,20 @@
 //
-//  DecimalDegreesEntryView.swift
+//  DecimalDegreesEntryView_New.swift
 //  MapPlayground
 //
-//  Created by Rolf Jaeger on 1/14/26.
+//  Created by Rolf Jaeger on 2/16/26.
 //
 
 import SwiftUI
 import CoreLocation
 
-/*
-This view supports the formats:
- # DDM: Decimal Degrees, e.g. 37.389°
-*/
-
-struct DecimalDegreesEntryView: View {
+struct DecimalDegreesEntryView_New: View {
     
-    var hemisphere: String
-    var maxDegrees: Int
+    @ObservedObject var locObj: LocationObject
     
-    @Binding var locDegrees: CLLocationDegrees
     @State private var plusMinusTarget: DecimalDegrees_PlusMinusTarget = .TENTHOUSANDTH
 
-    @State private var path = NavigationPath()
-    
-    @State private var degrees: Int = -180
+    @State private var degrees: Int = 90
     @State private var decimalDegrees: Double = -179.001
     @State private var minutesForRaymarineView: Int = 59
     @State private var minutesForDMSView: Int = 59
@@ -46,25 +37,27 @@ struct DecimalDegreesEntryView: View {
     @State private var isThousandthEditable = false
     @State private var isTenThousandthEditable = true
 
-    init(hemisphere: String, locDegrees: Binding<CLLocationDegrees>) {
-        self.hemisphere = hemisphere
-        if hemisphere == "N" || hemisphere == "S" {
-            maxDegrees = 90
-        } else {
-            maxDegrees = 180
-        }
-        
-        
-        _locDegrees = locDegrees // Initialize the @Binding
-        _degrees = State(initialValue: Int(locDegrees.wrappedValue))
-        _decimalDegrees = State(initialValue: Double(locDegrees.wrappedValue))
+    var locIndex: Int = 0
+    
+    init(locObj: LocationObject, locIndex: Int) {
+        self.locObj = locObj
+        self.locIndex = locIndex
         initializeDegreeValues()
     }
     
     fileprivate mutating func initializeDegreeValues() {
-        if hemisphere == "S" || hemisphere == "W" {
-            _degrees = State(initialValue: -degrees)
-            _decimalDegrees = State(initialValue: -decimalDegrees)
+        var locDegrees: Double
+        if locObj.latLong == .Latitude {
+            locDegrees = locObj.locations[locIndex].coordinate.latitude
+        } else {
+            locDegrees = locObj.locations[locIndex].coordinate.longitude
+        }
+        if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
+            _degrees = State(initialValue: -Int(locDegrees))
+            _decimalDegrees = State(initialValue: -Double(locDegrees))
+        } else {
+            _degrees = State(initialValue: Int(locDegrees))
+            _decimalDegrees = State(initialValue: Double(locDegrees))
         }
         let fractionalDegrees = decimalDegrees - Double(degrees)
         let decimalMinutes = fractionalDegrees * 60
@@ -90,25 +83,14 @@ struct DecimalDegreesEntryView: View {
     
     var body: some View {
         VStack {
-            MainView
-        }
-        .onAppear() {
-        }
-        .ignoresSafeArea(.keyboard)
-    }
-    
-    fileprivate var MainView: some View {
-        VStack(alignment: .center) {
-            VStack {
+            HStack {
                 DetailsView
                 PlusMinus
                     .padding(.top,-10)
             }
             .font(.largeTitle)
-            .bold()
             Instructions
         }
-        .frame(maxWidth: .infinity)
     }
     
     fileprivate var Instructions: some View {
@@ -135,7 +117,7 @@ struct DecimalDegreesEntryView: View {
                     }
             } else {
                 Picker("", selection: $degrees) {
-                    ForEach(0...maxDegrees, id: \.self) { value in
+                    ForEach(0...locObj.maxDegrees, id: \.self) { value in
                         Text("\(value)")
                             .font(Font.system(size: 40, weight: .regular, design: .default))
                     }
@@ -352,9 +334,14 @@ struct DecimalDegreesEntryView: View {
     
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView)
-        locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
-        if hemisphere == "S" || hemisphere == "W" {
-            locDegrees = -locDegrees
+        var newDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+        if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
+            newDegrees = -newDegrees
+        }
+        if locObj.latLong == .Latitude {
+            locObj.locations[locIndex].coordinate.latitude = newDegrees
+        } else {
+            locObj.locations[locIndex].coordinate.longitude = newDegrees
         }
     }
     
@@ -362,12 +349,17 @@ struct DecimalDegreesEntryView: View {
         let degrees = Int(decimalDegrees)
         let strDecimalDegrees = String(degrees) + "." + String(degreeTenth) + String(degreeHundredth) + String(degreeThousandth) +
             String(degreeTenThousandth)
-        if let test = Double(strDecimalDegrees) {
-            locDegrees = test
-            decimalDegrees = locDegrees
-            if hemisphere == "S" || hemisphere == "W" {
-                locDegrees = -locDegrees
+        if let newDegrees = Double(strDecimalDegrees) {
+            var modDegrees = newDegrees
+            if locObj.hemisphere == "S" ||  locObj.hemisphere == "W" {
+                modDegrees = -modDegrees
             }
+            if locObj.latLong == .Latitude {
+                locObj.locations[locIndex].coordinate.latitude = modDegrees
+            } else {
+                locObj.locations[locIndex].coordinate.longitude = modDegrees
+            }
+            decimalDegrees = newDegrees
 
         }
     }
@@ -407,7 +399,7 @@ struct DecimalDegreesEntryView: View {
         
         switch plusMinusTarget {
         case .DEGREES:
-            if degrees < maxDegrees - 1 {
+            if degrees < locObj.maxDegrees - 1 {
                 decimalDegrees += 1
             }
         case .TENTH:
@@ -429,7 +421,7 @@ struct DecimalDegreesEntryView: View {
             else {
                 let fractionalMinute = Int(String("\(degreeTenth)\(degreeHundredth)\(degreeThousandth)\(degreeTenThousandth)"))
                 if fractionalMinute == 9999 {
-                    if Int(decimalDegrees.rounded()) < maxDegrees {
+                    if Int(decimalDegrees.rounded()) < locObj.maxDegrees {
                         decimalDegrees += 1
                     }
                     degreeTenth = 0
@@ -453,7 +445,7 @@ struct DecimalDegreesEntryView: View {
                                 degreeThousandth = 0
                                 degreeTenThousandth = 0
                             } else {
-                                if Int(decimalDegrees.rounded()) < maxDegrees - 1 {
+                                if Int(decimalDegrees.rounded()) < locObj.maxDegrees - 1 {
                                     decimalDegrees += 1
                                     degreeTenth = 0
                                     degreeHundredth = 0
@@ -477,6 +469,7 @@ struct DecimalDegreesEntryView: View {
         case .DEGREES:
             if degrees > 0 {
                 decimalDegrees -= 1
+                
             }
         case .TENTH:
             if degreeTenth  > 0 {
@@ -528,8 +521,6 @@ struct DecimalDegreesEntryView: View {
 }
 
 #Preview {
-    @Previewable @State var tmp = CLLocationDegrees(floatLiteral: 120.5890)
-    @Previewable @State var hemisphere: String = "W"    
-    DecimalDegreesEntryView(hemisphere: hemisphere, locDegrees: $tmp)
+    let locObj = LocationObject()
+    DecimalDegreesEntryView_New(locObj: locObj, locIndex: 0)
 }
-
