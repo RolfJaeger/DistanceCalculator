@@ -16,7 +16,10 @@ This view supports the format:
 struct DMSEntryView_New: View {
     
     @ObservedObject var locObj: LocationObject
-    
+
+    @Binding var showView: Bool
+    @State private var showDialog = false
+
     @Environment(\.horizontalSizeClass) var sizeClass
     
     @State private var plusMinusTarget: DMS_PlusMinusTarget = .SECONDS
@@ -41,9 +44,10 @@ struct DMSEntryView_New: View {
 
     var locIndex: Int = 0
 
-    init(locObj: LocationObject, locIndex: Int) {
+    init(locObj: LocationObject, locIndex: Int, showView: Binding<Bool>) {
         self.locObj = locObj
         self.locIndex = locIndex
+        _showView = showView
         initializeDegreeValues()
     }
     
@@ -76,16 +80,9 @@ struct DMSEntryView_New: View {
     
     var body: some View {
         VStack {
-            EntryView
+            MainView
         }
         .ignoresSafeArea(.keyboard)
-    }
-    
-    fileprivate var EntryView: some View {
-        VStack {
-            MainView
-            Spacer()
-        }
     }
     
     fileprivate var Instructions: some View {
@@ -99,21 +96,7 @@ struct DMSEntryView_New: View {
                 Text("button.")
             }
         }
-        .font(.footnote)
-    }
-    
-    fileprivate var Instructions_iPad: some View {
-        VStack {
-            Text("Tap and scroll")
-            HStack {
-                Text("or tap the")
-                Image(systemName: "plus.square")
-                Text("or the")
-                Image(systemName: "minus.square")
-                Text("button.")
-            }
-        }
-        .font(Font.system(size: hintFont, weight: .regular, design: .default))
+        .font(isPad ? .system(size: 20.0) : .footnote)
     }
     
     fileprivate var PlusMinus: some View {
@@ -122,64 +105,80 @@ struct DMSEntryView_New: View {
                 IncreaseValue()
             }, label: {
                 Image(systemName: "plus.square")
-                    .font(Font.system(size: 40, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
             Button(action: {
                 DecreaseValue()
             }, label: {
                 Image(systemName: "minus.square")
-                    .font(Font.system(size: 40, weight: .regular, design: .default))
-            })
-            //.buttonStyle(.bordered)
-        }
-    }
-    
-    fileprivate var PlusMinus_iPad: some View {
-        HStack {
-            Button(action: {
-                IncreaseValue()
-            }, label: {
-                Image(systemName: "plus.square")
-                    .font(Font.system(size: 60, weight: .regular, design: .default))
-            })
-            //.buttonStyle(.bordered)
-            Button(action: {
-                DecreaseValue()
-            }, label: {
-                Image(systemName: "minus.square")
-                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
         }
     }
     
     fileprivate var MainView: some View {
-        VStack(alignment: .center) {
-            HStack {
-                DetailsView//_iPad
-                PlusMinus//_iPad
+        ZStack {
+            if showDialog {
+                UserDialog
+            } else {
+                VStack {
+                    TitleBar
+                    SwitchHemisphereButton
+                    HStack {
+                        DetailsView
+                        PlusMinus
+                    }
+                    .font(isPad ? .system(size: 50.0) : .title2)
+                    Instructions
+                        .padding(.bottom,10)
+                }
+                .border(.primary, width: 2.0)
+                .padding()
             }
-            Instructions
         }
-        .frame(maxWidth: .infinity)
+
     }
     
-    fileprivate var MainView_iPad: some View {
-        VStack(alignment: .center) {
-            VStack {
-                DetailsView_iPad
-                PlusMinus_iPad
+    fileprivate var TitleBar: some View {
+        HStack {
+            Text("Location \(locIndex + 1)")
+                .bold()
+                .padding(.leading, 20)
+            if locObj.latLong == .Latitude {
+                Text(" - Latitude")
+            } else {
+                Text(" - Longitude")
             }
-            .font(Font.system(size: dataFont, weight: .regular, design: .default))
-            .bold()
-            Instructions_iPad
+            Spacer()
+            Button(action: {
+                showView = false
+            }, label: {
+                Text("x")
+            })
+            .buttonStyle(.bordered)
+            .padding(.trailing,10)
         }
-        .frame(maxWidth: .infinity)
+        .font(isPad ? .system(size: 25.0) : .title3)
+        .padding(.top, 10)
+        .padding(.top, 10)
+    }
+    
+    fileprivate var SwitchHemisphereButton: some View {
+        VStack {
+            Button(action: {
+                showDialog = true
+            }, label: {
+                Text("Switch Hemisphere")
+            })
+            .buttonStyle(.bordered)
+            .padding()
+        }
+        .font(isPad ? .system(size: 25.0) : .body)
     }
     
     fileprivate var DetailsView: some View {
         HStack {
+            Text(locObj.hemisphere)
             if !showDegreesPicker {
                 Text("\(degrees)")
                     .onTapGesture {
@@ -190,7 +189,7 @@ struct DMSEntryView_New: View {
                 Picker("", selection: $degrees) {
                     ForEach(0...locObj.maxDegrees, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(isPad ? .system(size: 50.0) : .title2)
                     }
                 }
                 .pickerStyle(.wheel)
@@ -213,7 +212,7 @@ struct DMSEntryView_New: View {
                 Picker("", selection: $minutesForDMSView) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(isPad ? .system(size: 50.0) : .title2)
                     }
                 }
                 .pickerStyle(.wheel)
@@ -236,7 +235,7 @@ struct DMSEntryView_New: View {
                 Picker("", selection: $seconds) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(isPad ? .system(size: 50.0) : .title2)
                     }
                 }
                 .pickerStyle(.wheel)
@@ -250,93 +249,53 @@ struct DMSEntryView_New: View {
             Text("\"")
             
         }
-        .font(Font.system(size: 40, weight: .regular, design: .default))
         .padding(.top, 0)
         .padding(.bottom,5)
     }
     
-    fileprivate var DetailsView_iPad: some View {
-        HStack {
-            if !showDegreesPicker {
-                Text("\(degrees)")
-                    .onTapGesture {
-                        togglePickerVisibility(.Degrees)
-                        plusMinusTarget = .DEGREES
-                    }
-            } else {
-                Picker("", selection: $degrees) {
-                    ForEach(0...locObj.maxDegrees, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
+    fileprivate var UserDialog: some View {
+        VStack {
+            Text("Are you sure you want to switch hemisphere ?")
+                .font(.title)
+                .foregroundColor(.black)
+                .bold()
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 20) {
+                Button(action: {
+                    showDialog = false
+                    locObj.switchHemisphere(locIndex: locIndex)
+                }) {
+                    Text("Yes")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
-                .pickerStyle(.wheel)
-                .scaleEffect(2.0)
-                .frame(width: 120, height: 100)
-                .onChange(of: degrees) {
-                    updateDegreeValue()
+                Button(action: {
+                    // NO action
+                    showDialog = false
+                }) {
+                    Text("No")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
                 }
+
             }
-            
-            Text("\u{00B0}")
-            
-            if !showMinutesPicker {
-                Text("\(minutesForDMSView)")
-                    .onTapGesture {
-                        togglePickerVisibility(.Minutes)
-                        plusMinusTarget = .MINUTES
-                    }
-            } else {
-                Picker("", selection: $minutesForDMSView) {
-                    ForEach(0...59, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(2.0)
-                .frame(width: 120, height: 100)
-                .onChange(of: minutesForDMSView) {
-                    updateDegreeValue()
-                }
-            }
-            
-            VStack {
-                Text("'")
-                    .padding(.leading, -10)
-                    .padding(.bottom, 0)
-                Text(" ")
-                    .font(.system(size: 30, weight: .bold))
-            }
-            
-            if !showSecondsPicker {
-                Text("\(seconds)")
-                    .onTapGesture {
-                        togglePickerVisibility(.Seconds)
-                        plusMinusTarget = .SECONDS
-                    }
-            } else {
-                Picker("", selection: $seconds) {
-                    ForEach(0...59, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(2.0)
-                .frame(width: 120, height: 100)
-                
-                .onChange(of: seconds) {
-                    updateDegreeValue()
-                }
-            }
-            
-            Text("\"")
-            
         }
-        .font(Font.system(size: 80, weight: .regular, design: .default))
-        .padding(.top, 0)
-        .padding(.bottom,5)
+        .padding()
+        .frame(maxWidth: 300)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+
     }
     
     fileprivate func updateDegreeValue() {
@@ -346,16 +305,8 @@ struct DMSEntryView_New: View {
         } else {
             currentDegrees = locObj.locations[locIndex].coordinate.longitude
         }
-        var newDegrees = updateDegrees(originalDegrees: currentDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
-        if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
-            newDegrees = -newDegrees
-        }
-        if locObj.latLong == .Latitude {
-            locObj.locations[locIndex].coordinate.latitude = newDegrees
-        } else {
-            locObj.locations[locIndex].coordinate.longitude = newDegrees
-        }
-
+        let newDegrees = updateDegrees(originalDegrees: currentDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
+        locObj.updateLocation(newDegrees: newDegrees, locIndex: locIndex)
     }
     
     fileprivate func SwitchEdibility(target: DMS_PlusMinusTarget) {
@@ -468,11 +419,7 @@ struct DMSEntryView_New: View {
             currentDegrees = locObj.locations[locIndex].coordinate.longitude
         }
         var newDegrees = updateDegrees(originalDegrees: currentDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
-        if locObj.latLong == .Latitude {
-            locObj.locations[locIndex].coordinate.latitude = newDegrees
-        } else {
-            locObj.locations[locIndex].coordinate.longitude = newDegrees
-        }
+        locObj.updateLocation(newDegrees: newDegrees, locIndex: locIndex)
     }
     
     fileprivate func DecreaseValue() {
@@ -507,17 +454,13 @@ struct DMSEntryView_New: View {
             currentDegrees = locObj.locations[locIndex].coordinate.longitude
         }
         var newDegrees = updateDegrees(originalDegrees: currentDegrees, degrees: degrees, minutes: minutesForDMSView, seconds: seconds)
-        if locObj.latLong == .Latitude {
-            locObj.locations[locIndex].coordinate.latitude = newDegrees
-        } else {
-            locObj.locations[locIndex].coordinate.longitude = newDegrees
-        }
-
+        locObj.updateLocation(newDegrees: newDegrees, locIndex: locIndex)
     }
     
 }
 
 #Preview {
+    @Previewable @State var showView = true
     let locObj = LocationObject()
-    DMSEntryView_New(locObj: locObj, locIndex: 0)
+    DMSEntryView_New(locObj: locObj, locIndex: 0, showView: $showView)
 }

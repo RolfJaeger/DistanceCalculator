@@ -17,9 +17,11 @@ class LocationObject: ObservableObject {
     @Published var locations: [Location] = [Location]()
     @Published var region: MKCoordinateRegion?
     @Published var viewFormat: ViewFormat
-    @Published var hemisphere: String = "N"
-    @Published var latLong: LatLong = .Latitude
+    @Published var hemisphere: String = "W"
+    @Published var latLong: LatLong = .Longitude
     @Published var maxDegrees = 180
+    @Published var strDistance = "0.0"
+    @Published var bReturningFromMapView = false
     
     init() {
         Location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37, longitude: -122), name: "Location 1")
@@ -28,35 +30,57 @@ class LocationObject: ObservableObject {
         
         locations.append(Location1)
         locations.append(Location2)
-        region = MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: (Location1.coordinate.latitude + Location2.coordinate.latitude) / 2.0,
-                                                longitude: (Location1.coordinate.longitude + Location2.coordinate.longitude) / 2.0),
-                span: MKCoordinateSpan(latitudeDelta: calcLatDelta(), longitudeDelta: calcLongDelta())
-            )
+        strDistance = CalculateDistance()
+    }
+
+    func initializeLocationsWithCurrentLocation(currentLocation: CLLocationCoordinate2D) {
+        for i in 0...1 {
+            locations[i].coordinate.latitude = currentLocation.latitude.rounded(toPlaces: 3)
+            locations[i].coordinate.longitude = currentLocation.longitude.rounded(toPlaces: 3)
+            locations[i].name = "Location \(i + 1)"
+        }
+        strDistance = CalculateDistance()
+        region = setRegion()
+    }
+
+    func setLocationToCurrentLocation(currentLocation: CLLocationCoordinate2D, locIndex: Int) {
+        locations[locIndex].coordinate.latitude = currentLocation.latitude.rounded(toPlaces: 3)
+        locations[locIndex].coordinate.longitude = currentLocation.longitude.rounded(toPlaces: 3)
+        strDistance = CalculateDistance()
+        region = setRegion()
     }
     
-    fileprivate func calcLatDelta() -> CLLocationDegrees {
-        let delta = abs(Location1.coordinate.latitude - Location2.coordinate.latitude) * 3
+    private func calcLatDelta() -> CLLocationDegrees {
+        if locations[0].coordinate.latitude - locations[1].coordinate.latitude == 0 {
+            return 1.0
+        }
+        let delta = abs(locations[0].coordinate.latitude - locations[1].coordinate.latitude) * 1.5
         return delta
     }
 
-    fileprivate func calcLongDelta() -> CLLocationDegrees {
-        let delta = abs(Location1.coordinate.longitude - Location2.coordinate.longitude) * 3 //1.1
+    private func calcLongDelta() -> CLLocationDegrees {
+        if locations[0].coordinate.longitude - locations[1].coordinate.longitude == 0 {
+            return 1.0
+        }
+        let delta = abs(locations[0].coordinate.longitude - locations[1].coordinate.longitude) * 1.5 //1.1
         return delta
     }
 
-    private func CalculateDistance(
-        Loc1: Location,
-        Loc2: Location
-    ) -> String {
+    private func CalculateDistance() -> String {
 
-        let p1 = CLLocationCoordinate2D(latitude: Loc1.coordinate.latitude, longitude: Loc1.coordinate.longitude)
-        let p2 = CLLocationCoordinate2D(latitude: Loc2.coordinate.latitude, longitude: Loc2.coordinate.longitude)
+        let p1 = CLLocationCoordinate2D(latitude: locations[0].coordinate.latitude, longitude: locations[0].coordinate.longitude)
+        let p2 = CLLocationCoordinate2D(latitude: locations[1].coordinate.latitude, longitude: locations[1].coordinate.longitude)
 
         let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
         let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
         let nauticalMilesPerKilometer = 0.539957
-        let strDistance = String(format: "%.4f", location2.distance(from: location1) * nauticalMilesPerKilometer / 1000)
+        let distance = location2.distance(from: location1) * nauticalMilesPerKilometer / 1000
+        var strDistance: String
+        if distance > 5000 {
+            strDistance = "Too Large"
+        } else {
+            strDistance = String(format: "%.4f", distance) + " nm"
+        }
         return strDistance
     }
 
@@ -85,21 +109,23 @@ class LocationObject: ObservableObject {
         }
     }
     
-    func switchHemisphere() {
+    func switchHemisphere(locIndex: Int) {
         switch hemisphere {
         case "N":
             hemisphere = "S"
+            locations[locIndex].coordinate.latitude = -locations[locIndex].coordinate.latitude
         case "S":
             hemisphere = "N"
+            locations[locIndex].coordinate.latitude = -locations[locIndex].coordinate.latitude
         case "E":
             hemisphere = "W"
+            locations[locIndex].coordinate.longitude = -locations[locIndex].coordinate.longitude
         default:
             hemisphere = "E"
+            locations[locIndex].coordinate.longitude = -locations[locIndex].coordinate.longitude
         }
-    }
-    
-    func getDistance() -> String {
-        return CalculateDistance(Loc1: locations[0], Loc2: locations[1])
+        strDistance = CalculateDistance()
+        region = setRegion()
     }
     
     func getLatitute(_ index: Int) -> String {
@@ -116,8 +142,33 @@ class LocationObject: ObservableObject {
         locations = [Location]()
         locations.append(newLoc1)
         locations.append(newLoc2)
+        strDistance = CalculateDistance()
+        region = setRegion()
     }
     
+    func updateLocation(newDegrees: Double, locIndex: Int) {
+        var newValue = newDegrees
+        if hemisphere == "S" || hemisphere == "W" {
+            newValue = -newValue
+        }
+        if latLong == .Latitude {
+            locations[locIndex].coordinate.latitude = newValue
+        } else {
+            locations[locIndex].coordinate.longitude = newValue
+        }
+        strDistance = CalculateDistance()
+        region = setRegion()
+    }
+    
+    private func setRegion() -> MKCoordinateRegion {
+        let region =             MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: (locations[0].coordinate.latitude + locations[1].coordinate.latitude) / 2.0,
+                                            longitude: (locations[0].coordinate.longitude + locations[1].coordinate.longitude) / 2.0),
+            span: MKCoordinateSpan(latitudeDelta: calcLatDelta(), longitudeDelta: calcLongDelta())
+        )
+        return region
+    }
+
     private func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strDegrees: String
         switch viewFormat {

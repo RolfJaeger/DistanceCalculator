@@ -73,8 +73,8 @@ final class Coordinator_New: NSObject, MKMapViewDelegate {
         }) {
             parent.locObj.locations[index].coordinate = coord
             print("\(parent.locObj.locations[index].coordinate.latitude), \(parent.locObj.locations[index].coordinate.longitude)")
-            parent.strDistance = CalculateDistance(Loc1: parent.locObj.locations[0], Loc2: parent.locObj.locations[1])
-
+            //parent.strDistance = CalculateDistance(Loc1: parent.locObj.locations[0], Loc2: parent.locObj.locations[1])
+            parent.locObj.updateLocations(loc1: parent.locObj.locations[0], loc2: parent.locObj.locations[1])
             
         }
 
@@ -85,17 +85,6 @@ final class Coordinator_New: NSObject, MKMapViewDelegate {
 struct DraggableMapView_New: UIViewRepresentable {
 
     @ObservedObject var locObj: LocationObject
-    @Binding var strDistance: String
-
-    fileprivate func calcLatCenter() -> CLLocationDegrees {
-        let center = (locObj.Location1.coordinate.latitude + locObj.Location2.coordinate.latitude)/2.0
-        return center
-    }
-
-    fileprivate func calcLongCenter() -> CLLocationDegrees {
-        let center = (locObj.Location1.coordinate.longitude + locObj.Location2.coordinate.longitude) / 2.0
-        return center
-    }
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()

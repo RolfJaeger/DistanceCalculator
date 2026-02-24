@@ -26,18 +26,20 @@ struct FormatView: View {
         VStack {
             VStack {
                 Text("Location Format")
-                    .font(Font.system(size: 30, weight: .bold, design: .default))
+                    .font(isPad ? .system(size: 40.0) : .title)
                     .bold()
-                switch locObj.viewFormat {
-                case .DMS:
-                    Text("Degrees | Minutes | Seconds")
-                case .DDM:
-                    Text("Decimal Degrees")
-                case .Raymarine:
-                    Text("Degrees | Decimal Minutes")
+                VStack {
+                    switch locObj.viewFormat {
+                    case .DMS:
+                        Text("Degrees | Minutes | Seconds")
+                    case .DDM:
+                        Text("Decimal Degrees")
+                    case .Raymarine:
+                        Text("Degrees | Decimal Minutes")
+                    }
                 }
+                .font(isPad ? .system(size: 30.0) : .title2)
             }
-            .font(Font.system(size: 25, weight: .regular, design: .default))
             Button(action: {
                 switch locObj.viewFormat {
                 case .DMS:
@@ -49,7 +51,7 @@ struct FormatView: View {
                 }
             }, label: {
                 Text(txtSwitchFormat)
-                    .font(Font.system(size: 20, weight: .regular, design: .default))
+                    .font(isPad ? .system(size: 25.0) : .body)
             })
             .buttonStyle(.bordered)
         }

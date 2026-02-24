@@ -49,32 +49,23 @@ struct MapView_New: View {
     
     @GestureState private var dragState = DragState.inactive
     
-    @State private var viewState = CGSize.zero
-    @State private var strDistance: String = "0.0"
-    @State private var locations = [Location]()
-    
     var body: some View {
         VStack {
-            DraggableMapView_New(locObj: locObj, strDistance: $strDistance)
+            DraggableMapView_New(locObj: locObj)
             DistanceView
             HintView
         }
-        .edgesIgnoringSafeArea(.bottom)
         .onAppear {
-            locations = [locObj.Location1,  locObj.Location2]
-            strDistance = CalculateDistance(Loc1: locObj.locations[0], Loc2: locObj.locations[1])
+            locObj.bReturningFromMapView = true
         }
-        .onDisappear {
-        }
-        
+        .edgesIgnoringSafeArea(.bottom)
     }
     
     fileprivate var DistanceView: some View {
         HStack {
             Text("Distance:")
                 .bold()
-            Text(strDistance)
-            Text("nm")
+            Text(locObj.strDistance)
         }
         .frame(height: 30.0)
         .padding(.bottom, 5)

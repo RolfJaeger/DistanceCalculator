@@ -92,34 +92,13 @@ struct DecimalDegreesEntryView_New: View {
                 UserDialog
             } else {
                 VStack {
-                    HStack {
-                        Spacer()
-                        Text("Location \(locIndex + 1)")
-                            .font(.title3)
-                            .bold()
-                        Spacer()
-                        Button(action: {
-                            showView = false
-                        }, label: {
-                            Text("x")
-                        })
-                        .buttonStyle(.bordered)
-                        .padding(.trailing,10)
-                    }
-                    .padding(.top, 10)
-                    Button(action: {
-                        showDialog = true
-                    }, label: {
-                        Text("Switch Hemisphere")
-                    })
-                    .buttonStyle(.bordered)
-                    .padding()
+                    TitleBar
+                    SwitchHemisphereButton
                     HStack {
                         DetailsView
                         PlusMinus
-                            .padding(.top,-10)
                     }
-                    .font(.largeTitle)
+                    .font(isPad ? .system(size: 50.0) : .title3)
                     Instructions
                         .padding(.bottom,10)
                 }
@@ -127,6 +106,43 @@ struct DecimalDegreesEntryView_New: View {
                 .padding()
             }
         }
+    }
+    
+    fileprivate var TitleBar: some View {
+        HStack {
+            Text("Location \(locIndex + 1)")
+                .bold()
+                .padding(.leading, 20)
+            if locObj.latLong == .Latitude {
+                Text(" - Latitude")
+            } else {
+                Text(" - Longitude")
+            }
+            Spacer()
+            Button(action: {
+                showView = false
+            }, label: {
+                Text("x")
+            })
+            .buttonStyle(.bordered)
+            .padding(.trailing,10)
+        }
+        .font(isPad ? .system(size: 25.0) : .title3)
+        .padding(.top, 10)
+        .padding(.top, 10)
+    }
+    
+    fileprivate var SwitchHemisphereButton: some View {
+        VStack {
+            Button(action: {
+                showDialog = true
+            }, label: {
+                Text("Switch Hemisphere")
+            })
+            .buttonStyle(.bordered)
+            .padding()
+        }
+        .font(isPad ? .system(size: 20.0) : .body)
     }
     
     fileprivate var Instructions: some View {
@@ -140,7 +156,7 @@ struct DecimalDegreesEntryView_New: View {
                 Text("button.")
             }
         }
-        .font(.footnote)
+        .font(isPad ? .system(size: 20.0) : .footnote)
     }
     
     fileprivate var DetailsView: some View {
@@ -157,7 +173,7 @@ struct DecimalDegreesEntryView_New: View {
                     Picker("", selection: $degrees) {
                         ForEach(0...locObj.maxDegrees, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 50.0) : .title3)
                         }
                     }
                     .pickerStyle(.wheel)
@@ -181,12 +197,12 @@ struct DecimalDegreesEntryView_New: View {
                     Picker("", selection: $degreeTenth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 50.0) : .title3)
                         }
                     }
                     .pickerStyle(.wheel)
                     .scaleEffect(1.0)
-                    .frame(width: 40, height: 100)
+                    .frame(width: 50, height: 100)
                     .onAppear {
                         degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
                     }
@@ -206,12 +222,12 @@ struct DecimalDegreesEntryView_New: View {
                     Picker("", selection: $degreeHundredth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 50.0) : .title3)
                         }
                     }
                     .pickerStyle(.wheel)
                     .scaleEffect(1.0)
-                    .frame(width: 40, height: 100)
+                    .frame(width: 50, height: 100)
                     .onAppear {
                         degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
                     }
@@ -231,12 +247,12 @@ struct DecimalDegreesEntryView_New: View {
                     Picker("", selection: $degreeThousandth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 50.0) : .title3)
                         }
                     }
                     .pickerStyle(.wheel)
                     .scaleEffect(1.0)
-                    .frame(width: 40, height: 90)
+                    .frame(width: 50, height: 90)
                     .onAppear {
                         degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
                     }
@@ -256,12 +272,12 @@ struct DecimalDegreesEntryView_New: View {
                     Picker("", selection: $degreeTenThousandth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 50.0) : .title3)
                         }
                     }
                     .pickerStyle(.wheel)
                     .scaleEffect(1.0)
-                    .frame(width: 40, height: 90)
+                    .frame(width: 50, height: 90)
                     .onAppear {
                         degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
                     }
@@ -273,7 +289,6 @@ struct DecimalDegreesEntryView_New: View {
                 Text("°")
                 
             }
-            .font(Font.system(size: 40, weight: .regular, design: .default))
             .padding(.top, 0)
             .padding(.bottom,5)
         }
@@ -290,7 +305,7 @@ struct DecimalDegreesEntryView_New: View {
             HStack(spacing: 20) {
                 Button(action: {
                     showDialog = false
-                    locObj.switchHemisphere()
+                    locObj.switchHemisphere(locIndex: locIndex)
                 }) {
                     Text("Yes")
                         .frame(maxWidth: .infinity)
@@ -323,7 +338,6 @@ struct DecimalDegreesEntryView_New: View {
         .shadow(radius: 10)
 
     }
-    
 
     fileprivate func SwitchEdibility(target: DecimalDegrees_PlusMinusTarget) {
         
@@ -413,13 +427,12 @@ struct DecimalDegreesEntryView_New: View {
             })
             //.buttonStyle(.bordered)
         }
-        .padding(.top, 10)
-        .padding(.bottom, 10)
     }
     
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView)
         var newDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+        decimalDegrees = newDegrees
         if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
             newDegrees = -newDegrees
         }

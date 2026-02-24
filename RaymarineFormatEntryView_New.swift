@@ -18,7 +18,9 @@ struct RaymarineFormatEntryView_New: View {
     @Environment(\.horizontalSizeClass) var sizeClass
     
     @ObservedObject var locObj: LocationObject
-    
+    @Binding var showView: Bool
+    @State private var showDialog = false
+
     @State private var plusMinusTarget:  Raymarine_PlusMinusTarget = .THOUSANDTH
 
     @State private var path = NavigationPath()
@@ -55,9 +57,10 @@ struct RaymarineFormatEntryView_New: View {
     
     var locIndex: Int = 0
 
-    init(locObj: LocationObject, locIndex: Int) {
+    init(locObj: LocationObject, locIndex: Int, showView: Binding<Bool>) {
         self.locObj = locObj
         self.locIndex = locIndex
+        _showView = showView
         initializeDegreeValues()
     }
     
@@ -104,20 +107,45 @@ struct RaymarineFormatEntryView_New: View {
 
     var body: some View {
         VStack {
-            EntryView
+            MainView
         }
         .ignoresSafeArea(.keyboard)
     }
     
-    fileprivate var EntryView: some View {
-        VStack {
-            if sizeClass == .regular {
-                MainView//_iPad
+    fileprivate var TitleBar: some View {
+        HStack {
+            Text("Location \(locIndex + 1)")
+                .bold()
+                .padding(.leading, 20)
+            if locObj.latLong == .Latitude {
+                Text(" - Latitude")
             } else {
-                MainView
+                Text(" - Longitude")
             }
             Spacer()
+            Button(action: {
+                showView = false
+            }, label: {
+                Text("x")
+            })
+            .buttonStyle(.bordered)
+            .padding(.trailing,10)
         }
+        .font(isPad ? .system(size: 25.0) : .title3)
+        .padding(.top, 10)
+    }
+
+    fileprivate var SwitchHemisphereButton: some View {
+        VStack {
+            Button(action: {
+                showDialog = true
+            }, label: {
+                Text("Switch Hemisphere")
+            })
+            .buttonStyle(.bordered)
+            .padding()
+        }
+        .font(isPad ? .system(size: 25.0) : .body)
     }
     
     fileprivate var Instructions: some View {
@@ -131,7 +159,7 @@ struct RaymarineFormatEntryView_New: View {
                 Text("button.")
             }
         }
-        .font(.footnote)
+        .font(isPad ? .system(size: 20.0) : .footnote)
     }
     
     fileprivate var Instructions_iPad: some View {
@@ -221,41 +249,86 @@ struct RaymarineFormatEntryView_New: View {
     }
     
     fileprivate var MainView: some View {
-        VStack(alignment: .center) {
-            if sizeClass == .regular {
-                HStack {
-                    DetailsView//_iPad
-                    PlusMinus//_iPad
-                }
-                .font(.largeTitle)
+        ZStack {
+            if showDialog {
+                UserDialog
             } else {
                 VStack {
-                    DetailsView
-                    PlusMinus
+                    if sizeClass == .regular {
+                        TitleBar
+                        SwitchHemisphereButton
+                        HStack {
+                            DetailsView_iPad
+                            PlusMinus_iPad
+                        }
+                        .font(isPad ? .system(size: 50.0) : .title2)
+                    } else {
+                        TitleBar
+                        SwitchHemisphereButton
+                        HStack {
+                            DetailsView
+                            PlusMinus
+                        }
+                        .font(Font.system(size: 25, weight: .regular, design: .default))
+                    }
+                    Instructions
+                        .padding(.bottom,10)
                 }
-                .font(.largeTitle)
+                .border(.primary, width: 2.0)
+                .padding()
+            }
+        }
+    }
+    
+    fileprivate var UserDialog: some View {
+        VStack {
+            Text("Are you sure you want to switch hemisphere ?")
+                .font(.title)
+                .foregroundColor(.black)
                 .bold()
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 20) {
+                Button(action: {
+                    showDialog = false
+                    locObj.switchHemisphere(locIndex: locIndex)
+                }) {
+                    Text("Yes")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                Button(action: {
+                    // NO action
+                    showDialog = false
+                }) {
+                    Text("No")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                }
+
             }
-            Instructions
         }
-        .frame(maxWidth: .infinity)
+        .padding()
+        .frame(maxWidth: 300)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+
     }
     
-    fileprivate var MainView_iPad: some View {
-        VStack(alignment: .center) {
-            VStack {
-                DetailsView_iPad
-                PlusMinus_iPad
-            }
-            .font(Font.system(size: dataFont, weight: .regular, design: .default))
-            .bold()
-            Instructions_iPad
-        }
-        .frame(maxWidth: .infinity)
-    }
-    
+
     fileprivate var DetailsView: some View {
         HStack {
+            Text(locObj.hemisphere)
             if !showDegreesPicker {
                 Text("\(degrees)")
                     .onTapGesture {
@@ -266,14 +339,13 @@ struct RaymarineFormatEntryView_New: View {
                 Picker("", selection: $degrees) {
                     ForEach(0...locObj.maxDegrees, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(Font.system(size: 25, weight: .regular, design: .default))
                     }
                 }
                 .pickerStyle(.wheel)
                 .scaleEffect(1.0)
                 .frame(width: 100, height: 100)
                 .onChange(of: degrees) {
-                    //updateDegreesValue()
                     updateDegreesValueForRaymarineFormat()
                 }
             }
@@ -291,7 +363,7 @@ struct RaymarineFormatEntryView_New: View {
                 Picker("", selection: $minutesForRaymarineView) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(Font.system(size: 25, weight: .regular, design: .default))
                     }
                 }
                 .pickerStyle(.wheel)
@@ -314,7 +386,7 @@ struct RaymarineFormatEntryView_New: View {
                 Picker("", selection: $minuteTenth) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(Font.system(size: 25, weight: .regular, design: .default))
                     }
                 }
                 .pickerStyle(.wheel)
@@ -336,7 +408,7 @@ struct RaymarineFormatEntryView_New: View {
                 Picker("", selection: $minuteHundredth) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(Font.system(size: 25, weight: .regular, design: .default))
                     }
                 }
                 .pickerStyle(.wheel)
@@ -358,7 +430,7 @@ struct RaymarineFormatEntryView_New: View {
                 Picker("", selection: $minuteThousandth) {
                     ForEach(0...59, id: \.self) { value in
                         Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                            .font(Font.system(size: 25, weight: .regular, design: .default))
                     }
                 }
                 .pickerStyle(.wheel)
@@ -374,6 +446,7 @@ struct RaymarineFormatEntryView_New: View {
     
     fileprivate var DetailsView_iPad: some View {
         HStack {
+            Text(locObj.hemisphere)
             if !showDegreesPicker {
                 Text("\(degrees)")
                     .onTapGesture {
@@ -385,17 +458,17 @@ struct RaymarineFormatEntryView_New: View {
                     Picker("", selection: $degrees) {
                         ForEach(0...locObj.maxDegrees, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 25.0) : .title2)
                         }
                     }
                     .pickerStyle(.wheel)
+                    .padding(.top, 35)
                     .scaleEffect(2.0)
                     .frame(width: 120, height: 100)
                     .onChange(of: degrees) {
                         updateDegreesValueForRaymarineFormat()
                     }
                     Text(" ")
-                        .font(.system(size: 30, weight: .bold))
                 }
             }
             
@@ -413,22 +486,21 @@ struct RaymarineFormatEntryView_New: View {
                     Picker("", selection: $minutesForRaymarineView) {
                         ForEach(0...59, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 25.0) : .title2)
+                                .frame(width: 30, height: 100)
                         }
                     }
                     .pickerStyle(.wheel)
+                    .padding(.top, 35)
                     .scaleEffect(2.0)
-                    .frame(width: 120, height: 100)
+                    .frame(width: 30, height: 100)
                     .onChange(of: minutesForRaymarineView) {
                         updateDegreesValueForRaymarineFormat()
                     }
-                    Text(" ")
-                        .font(.system(size: 30, weight: .bold))
                 }
             }
             
             Text(".")
-
             if !showTenthPicker {
                 Text("\(minuteTenth)")
                     .onTapGesture {
@@ -440,17 +512,17 @@ struct RaymarineFormatEntryView_New: View {
                     Picker("", selection: $minuteTenth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(isPad ? .system(size: 25.0) : .title2)
                         }
                     }
                     .pickerStyle(.wheel)
+                    .padding(.top, 35)
                     .scaleEffect(2.0)
                     .frame(width: 50, height: 100)
                     .onChange(of: minuteTenth) {
                         updateDegreesValueForRaymarineFormat()
                     }
                     Text(" ")
-                        .font(.system(size: 30, weight: .bold))
                 }
             }
             
@@ -466,17 +538,17 @@ struct RaymarineFormatEntryView_New: View {
                     Picker("", selection: $minuteHundredth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(Font.system(size: 25.0, weight: .regular, design: .default))
                         }
                     }
                     .pickerStyle(.wheel)
+                    .padding(.top, 35)
                     .scaleEffect(2.0)
                     .frame(width: 50, height: 100)
                     .onChange(of: minuteHundredth) {
                         updateDegreesValueForRaymarineFormat()
                     }
                     Text(" ")
-                        .font(.system(size: 30, weight: .bold))
                 }
             }
             
@@ -492,10 +564,11 @@ struct RaymarineFormatEntryView_New: View {
                     Picker("", selection: $minuteThousandth) {
                         ForEach(0...9, id: \.self) { value in
                             Text("\(value)")
-                                .font(Font.system(size: 40, weight: .regular, design: .default))
+                                .font(Font.system(size: 25.0, weight: .regular, design: .default))
                         }
                     }
                     .pickerStyle(.wheel)
+                    .padding(.top, 25)
                     .scaleEffect(2.0)
                     .frame(width: 50, height: 100)
                     .onChange(of: minuteThousandth) {
@@ -509,7 +582,6 @@ struct RaymarineFormatEntryView_New: View {
             Text("'")
 
         }
-        .font(Font.system(size: 80, weight: .regular, design: .default))
         .padding(.top, 0)
         .padding(.bottom,5)
     }
@@ -520,14 +592,12 @@ struct RaymarineFormatEntryView_New: View {
                 IncreaseValue()
             }, label: {
                 Image(systemName: "plus.square")
-                    .font(Font.system(size: 40, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
             Button(action: {
                 DecreaseValue()
             }, label: {
                 Image(systemName: "minus.square")
-                    .font(Font.system(size: 40, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
         }
@@ -539,14 +609,12 @@ struct RaymarineFormatEntryView_New: View {
                 IncreaseValue()
             }, label: {
                 Image(systemName: "plus.square")
-                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
             Button(action: {
                 DecreaseValue()
             }, label: {
                 Image(systemName: "minus.square")
-                    .font(Font.system(size: 60, weight: .regular, design: .default))
             })
             //.buttonStyle(.bordered)
         }
@@ -557,14 +625,7 @@ struct RaymarineFormatEntryView_New: View {
         if let test = Double(strDecimalMinutes) {
             minutesInDecimalFormat = test
             var newDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
-            if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
-                newDegrees = -newDegrees
-            }
-            if locObj.latLong == .Latitude {
-                locObj.locations[locIndex].coordinate.latitude = newDegrees
-            } else {
-                locObj.locations[locIndex].coordinate.longitude = newDegrees
-            }
+            locObj.updateLocation(newDegrees: newDegrees, locIndex: locIndex)
         }
     }
     
@@ -732,6 +793,7 @@ struct RaymarineFormatEntryView_New: View {
 }
 
 #Preview {
+    @Previewable @State var showView = true
     let locObj = LocationObject()
-    RaymarineFormatEntryView_New(locObj: locObj, locIndex: 0)
+    RaymarineFormatEntryView_New(locObj: locObj, locIndex: 0, showView: $showView)
 }
