@@ -118,6 +118,7 @@ struct LocationsOnMap: View {
         .frame(height: 30.0)
         .padding(.bottom, 5)
     }
+
     fileprivate func calcLatCenter() -> CLLocationDegrees {
         let center = (location1.coordinate.latitude + location2.coordinate.latitude)/2.0
         return center

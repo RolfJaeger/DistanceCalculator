@@ -70,9 +70,9 @@ struct LocationsOnMap_New: View {
                 VStack {
                     switch locObject.viewFormat {
                     case .DMS:
-                        DecimalDegreesEntryView_New(locObj: locObject, locIndex: locIndex)
-                    case .DDM:
                         DMSEntryView_New(locObj: locObject, locIndex: locIndex)
+                    case .DDM:
+                        DecimalDegreesEntryView_New(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
                     case .Raymarine:
                         RaymarineFormatEntryView_New(locObj: locObject, locIndex: locIndex)
                     }

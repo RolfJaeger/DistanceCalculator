@@ -76,6 +76,28 @@ class LocationObject: ObservableObject {
         }
     }
 
+    func setHemisphere(locIndex: Int) {
+        let loc = locations[locIndex]
+        if latLong == .Latitude {
+            hemisphere = loc.coordinate.latitude >= 0 ? "N" : "S"
+        } else {
+            hemisphere = loc.coordinate.longitude >= 0 ? "E" : "W"
+        }
+    }
+    
+    func switchHemisphere() {
+        switch hemisphere {
+        case "N":
+            hemisphere = "S"
+        case "S":
+            hemisphere = "N"
+        case "E":
+            hemisphere = "W"
+        default:
+            hemisphere = "E"
+        }
+    }
+    
     func getDistance() -> String {
         return CalculateDistance(Loc1: locations[0], Loc2: locations[1])
     }
@@ -87,7 +109,15 @@ class LocationObject: ObservableObject {
     func getLongitute(_ index: Int) -> String {
         return DegreesToStringInSelectedFormat(degrees: locations[index].coordinate.longitude, viewFormat: viewFormat)
     }
-
+    
+    func updateLocations(loc1: Location, loc2: Location) {
+        let newLoc1 = Location(coordinate: loc1.coordinate, name: loc1.name)
+        let newLoc2 = Location(coordinate: loc2.coordinate, name: loc2.name)
+        locations = [Location]()
+        locations.append(newLoc1)
+        locations.append(newLoc2)
+    }
+    
     private func DegreesToStringInSelectedFormat(degrees: CLLocationDegrees, viewFormat: ViewFormat) -> String {
         var strDegrees: String
         switch viewFormat {
@@ -140,4 +170,3 @@ class LocationObject: ObservableObject {
     }
 
 }
-

@@ -99,6 +99,7 @@ struct DraggableMapView: UIViewRepresentable {
 
     @Binding var locations: [Location]
     @Binding var strDistance: String
+    
     var region: MKCoordinateRegion?
     
     init(locations: Binding<[Location]>, strDistance: Binding<String>, region: MKCoordinateRegion? = nil) {

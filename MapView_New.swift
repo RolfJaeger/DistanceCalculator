@@ -13,7 +13,7 @@ import Foundation
 struct MapView_New: View {
     
     @ObservedObject var locObj: LocationObject
-
+    
     enum DragState {
         case inactive
         case pressing
@@ -55,18 +55,40 @@ struct MapView_New: View {
     
     var body: some View {
         VStack {
-            DraggableMapView_New(locObj: locObj)
-            //DistanceView
-            //HintView
+            DraggableMapView_New(locObj: locObj, strDistance: $strDistance)
+            DistanceView
+            HintView
         }
         .edgesIgnoringSafeArea(.bottom)
         .onAppear {
             locations = [locObj.Location1,  locObj.Location2]
+            strDistance = CalculateDistance(Loc1: locObj.locations[0], Loc2: locObj.locations[1])
         }
         .onDisappear {
         }
-
+        
     }
+    
+    fileprivate var DistanceView: some View {
+        HStack {
+            Text("Distance:")
+                .bold()
+            Text(strDistance)
+            Text("nm")
+        }
+        .frame(height: 30.0)
+        .padding(.bottom, 5)
+    }
+    
+    fileprivate var HintView: some View {
+        VStack {
+            Text("You may move the locations")
+            Text("by long-tapping and dragging.")
+        }
+        .font(.footnote)
+        .padding(.bottom, 10)
+    }
+
 }
 
 #Preview {
