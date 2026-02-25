@@ -13,12 +13,7 @@ struct MapPlaygroundApp: App {
 
     var body: some Scene {
         WindowGroup {
-            //DeviceSwitch()
-            //TestOfDraggableMapView()
-            //LocationDBView(location: $location)
-            
-            //LocationsOnMap_New()
-            DistanceView_New()
+            DistanceView()
         }
     }
 }

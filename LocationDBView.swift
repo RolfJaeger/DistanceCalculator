@@ -1,8 +1,8 @@
 //
-//  LocationDBView.swift
+//  LocationDBView_New.swift
 //  MapPlayground
 //
-//  Created by Rolf Jaeger on 1/29/26.
+//  Created by Rolf Jaeger on 2/24/26.
 //
 
 import SwiftUI
@@ -10,10 +10,10 @@ import CoreLocation
 
 struct LocationDBView: View {
     
-    @Binding var location: Location
-    @State var currentLocation = Location(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0), name: "Test")
+    @ObservedObject var locObj: LocationObject
 
-    @State var viewFormat: ViewFormat = .DDM
+    var locIndex: Int
+    
     @State var showAlert = false
     @State var txtAlert = ""
     
@@ -30,7 +30,7 @@ struct LocationDBView: View {
     private var locationOnEntry: Location
     
     var txtSwitchFormat: String {
-        switch viewFormat {
+        switch locObj.viewFormat {
         case .DMS:
             return "Switch to Raymarine Format"
         case .DDM:
@@ -40,12 +40,10 @@ struct LocationDBView: View {
         }
     }
     
-    init(location: Binding<Location>) {
-        _location = location
-        locationOnEntry = location.wrappedValue
-        _codableLocations = State(initialValue: restoreSavedLocations())
-        // Use for debugging GUI
-        //_codableLocations = State(initialValue: initializeLongLocationsList())
+    init(locObj: LocationObject,locIndex: Int) {
+        self.locObj = locObj
+        self.locIndex = locIndex
+        locationOnEntry = locObj.locations[locIndex]
     }
     
     var body: some View {
@@ -67,8 +65,10 @@ struct LocationDBView: View {
             ControlButtons
             Spacer()
         }
-        .onAppear {
-            currentLocation = location
+        .task {
+            if codableLocations.isEmpty {
+                codableLocations = restoreSavedLocations()
+            }
         }
     }
     
@@ -76,10 +76,10 @@ struct LocationDBView: View {
         VStack {
             VStack {
                 Text("Location Format")
-                    .font(isPad ? .system(size: 30.0) : .body)
+                    .font(isPad ? .system(size: 30.0) : .title3)
                     .bold()
                 VStack {
-                    switch viewFormat {
+                    switch locObj.viewFormat {
                     case .DMS:
                         Text("Degrees | Minutes | Seconds")
                     case .DDM:
@@ -91,13 +91,13 @@ struct LocationDBView: View {
                 .font(isPad ? .system(size: 20.0) : .body)
             }
             Button(action: {
-                switch viewFormat {
+                switch locObj.viewFormat {
                 case .DMS:
-                    viewFormat = .Raymarine
+                    locObj.viewFormat = .Raymarine
                 case .DDM:
-                    viewFormat = .DMS
+                    locObj.viewFormat = .DMS
                 case .Raymarine:
-                    viewFormat = .DDM
+                    locObj.viewFormat = .DDM
                 }
             }, label: {
                 Text(txtSwitchFormat)
@@ -112,8 +112,8 @@ struct LocationDBView: View {
             Text("Current Location:")
                 .bold()
             HStack {
-                Text(DegreesToStringInSelectedFormat(location: currentLocation, latLong: .Latitude, viewFormat: viewFormat))
-                Text(DegreesToStringInSelectedFormat(location: currentLocation, latLong: .Longitude, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(location: locObj.locations[locIndex], latLong: .Latitude, viewFormat: locObj.viewFormat))
+                Text(DegreesToStringInSelectedFormat(location: locObj.locations[locIndex], latLong: .Longitude, viewFormat: locObj.viewFormat))
             }
         }
         .font(isPad ? .system(size: 30.0) : .body)
@@ -142,8 +142,8 @@ struct LocationDBView: View {
         VStack {
             Text(selectedCodableLocation!.name)
             HStack {
-                Text(DegreesToStringInSelectedFormat(degrees: selectedCodableLocation!.coordinate.latitude, viewFormat: viewFormat))
-                Text(DegreesToStringInSelectedFormat(degrees: selectedCodableLocation!.coordinate.longitude, viewFormat: viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: selectedCodableLocation!.coordinate.latitude, viewFormat: locObj.viewFormat))
+                Text(DegreesToStringInSelectedFormat(degrees: selectedCodableLocation!.coordinate.longitude, viewFormat: locObj.viewFormat))
             }
         }
         .font(isPad ? .system(size: 30.0) : .body)
@@ -199,7 +199,7 @@ struct LocationDBView: View {
             if !isNameInLocationDatabase(name: nameOfLocationToSave) {
                 Button(action: {
                     if nameOfLocationToSave.count >= 5 {
-                        saveLocationInDatabase(location: currentLocation, nameOfLocation: nameOfLocationToSave)
+                        saveLocationInDatabase(location: locObj.locations[locIndex], nameOfLocation: nameOfLocationToSave)
                         nameIsFocused = false
                         showSaveLocationView.toggle()
                     } else {
@@ -213,14 +213,14 @@ struct LocationDBView: View {
                 .buttonStyle(.bordered)
                 
             } else {
-                if locationInDatabaseWithThisNameHasSameCoordinates(loc: currentLocation, nameToSave: nameOfLocationToSave, cLocs: codableLocations) {
+                if locationInDatabaseWithThisNameHasSameCoordinates(loc: locObj.locations[locIndex], nameToSave: nameOfLocationToSave, cLocs: codableLocations) {
                     Text("Already in your database")
                         .font(isPad ? .system(size: 30.0) : .body)
                         .multilineTextAlignment(.center)
                         .padding()
                 } else {
                     Button(action: {
-                        replaceLocationInDatabase(location: currentLocation, nameOfLocation: nameOfLocationToSave)
+                        replaceLocationInDatabase(location: locObj.locations[locIndex], nameOfLocation: nameOfLocationToSave)
                         nameIsFocused = false
                         showSaveLocationView.toggle()
                     }, label: {
@@ -239,7 +239,7 @@ struct LocationDBView: View {
         VStack {
             if selectedCodableLocation != nil {
                 Button(action: {
-                    currentLocation = Location(coordinate: CLLocationCoordinate2D(latitude: selectedCodableLocation!.coordinate.latitude, longitude: selectedCodableLocation!.coordinate.longitude), name: currentLocation.name)
+                    locObj.locations[locIndex] = Location(coordinate: CLLocationCoordinate2D(latitude: selectedCodableLocation!.coordinate.latitude, longitude: selectedCodableLocation!.coordinate.longitude), name: locObj.locations[locIndex].name)
                     selectedCodableLocation = nil
                     isLocationAlreadyInDB = true
                 }, label: {
@@ -258,9 +258,9 @@ struct LocationDBView: View {
                     .buttonStyle(.bordered)
                 }
             }
-            if !isSameCoordinate(loc1: currentLocation, loc2: locationOnEntry) {
+            if !isSameCoordinate(loc1: locObj.locations[locIndex], loc2: locationOnEntry) {
                 Button(action: {
-                    currentLocation = locationOnEntry
+                    locObj.locations[locIndex] = locationOnEntry
                     showSaveLocationView = true
                     selectedCodableLocation = nil
                 }, label: {
@@ -449,6 +449,6 @@ struct LocationDBView: View {
 }
 
 #Preview {
-    @Previewable @State var location: Location = Location(coordinate: CLLocationCoordinate2D(latitude: 37.0, longitude: 122.0), name: "Test Loc")
-    LocationDBView(location: $location)
+    let locObj = LocationObject()
+    LocationDBView(locObj: locObj, locIndex: 0)
 }

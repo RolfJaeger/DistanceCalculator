@@ -29,10 +29,10 @@ class CustomAnnotationView_New : MKPinAnnotationView
 
 final class Coordinator_New: NSObject, MKMapViewDelegate {
 
-    var parent: DraggableMapView_New
+    var parent: DraggableMapView
     private var annotations: [UUID: MKPointAnnotation] = [:]
 
-    init(_ parent: DraggableMapView_New) {
+    init(_ parent: DraggableMapView) {
         self.parent = parent
     }
 
@@ -82,7 +82,7 @@ final class Coordinator_New: NSObject, MKMapViewDelegate {
     }
 }
 
-struct DraggableMapView_New: UIViewRepresentable {
+struct DraggableMapView: UIViewRepresentable {
 
     @ObservedObject var locObj: LocationObject
 

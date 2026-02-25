@@ -1,29 +1,24 @@
 //
-//  DecimalDegreesEntryView.swift
+//  DecimalDegreesEntryView_New.swift
 //  MapPlayground
 //
-//  Created by Rolf Jaeger on 1/14/26.
+//  Created by Rolf Jaeger on 2/16/26.
 //
 
 import SwiftUI
 import CoreLocation
 
-/*
-This view supports the formats:
- # DDM: Decimal Degrees, e.g. 37.389°
-*/
-
 struct DecimalDegreesEntryView: View {
     
-    var hemisphere: String
-    var maxDegrees: Int
+    @ObservedObject var locObj: LocationObject
     
-    @Binding var locDegrees: CLLocationDegrees
+    @Binding var showView: Bool
+    
+    @State private var showDialog = false
+
     @State private var plusMinusTarget: DecimalDegrees_PlusMinusTarget = .TENTHOUSANDTH
 
-    @State private var path = NavigationPath()
-    
-    @State private var degrees: Int = -180
+    @State private var degrees: Int = 90
     @State private var decimalDegrees: Double = -179.001
     @State private var minutesForRaymarineView: Int = 59
     @State private var minutesForDMSView: Int = 59
@@ -46,25 +41,28 @@ struct DecimalDegreesEntryView: View {
     @State private var isThousandthEditable = false
     @State private var isTenThousandthEditable = true
 
-    init(hemisphere: String, locDegrees: Binding<CLLocationDegrees>) {
-        self.hemisphere = hemisphere
-        if hemisphere == "N" || hemisphere == "S" {
-            maxDegrees = 90
-        } else {
-            maxDegrees = 180
-        }
-        
-        
-        _locDegrees = locDegrees // Initialize the @Binding
-        _degrees = State(initialValue: Int(locDegrees.wrappedValue))
-        _decimalDegrees = State(initialValue: Double(locDegrees.wrappedValue))
+    var locIndex: Int = 0
+    
+    init(locObj: LocationObject, locIndex: Int, showView: Binding<Bool>) {
+        self.locObj = locObj
+        self.locIndex = locIndex
+        _showView = showView
         initializeDegreeValues()
     }
     
     fileprivate mutating func initializeDegreeValues() {
-        if hemisphere == "S" || hemisphere == "W" {
-            _degrees = State(initialValue: -degrees)
-            _decimalDegrees = State(initialValue: -decimalDegrees)
+        var locDegrees: Double
+        if locObj.latLong == .Latitude {
+            locDegrees = locObj.locations[locIndex].coordinate.latitude
+        } else {
+            locDegrees = locObj.locations[locIndex].coordinate.longitude
+        }
+        if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
+            _degrees = State(initialValue: -Int(locDegrees))
+            _decimalDegrees = State(initialValue: -Double(locDegrees))
+        } else {
+            _degrees = State(initialValue: Int(locDegrees))
+            _decimalDegrees = State(initialValue: Double(locDegrees))
         }
         let fractionalDegrees = decimalDegrees - Double(degrees)
         let decimalMinutes = fractionalDegrees * 60
@@ -89,26 +87,62 @@ struct DecimalDegreesEntryView: View {
     }
     
     var body: some View {
-        VStack {
-            MainView
+        ZStack {
+            if showDialog {
+                UserDialog
+            } else {
+                VStack {
+                    TitleBar
+                    SwitchHemisphereButton
+                    HStack {
+                        DetailsView
+                        PlusMinus
+                    }
+                    .font(isPad ? .system(size: 50.0) : .title3)
+                    Instructions
+                        .padding(.bottom,10)
+                }
+                .border(.primary, width: 2.0)
+                .padding()
+            }
         }
-        .onAppear() {
-        }
-        .ignoresSafeArea(.keyboard)
     }
     
-    fileprivate var MainView: some View {
-        VStack(alignment: .center) {
-            VStack {
-                DetailsView
-                PlusMinus
-                    .padding(.top,-10)
+    fileprivate var TitleBar: some View {
+        HStack {
+            Text("Location \(locIndex + 1)")
+                .bold()
+                .padding(.leading, 20)
+            if locObj.latLong == .Latitude {
+                Text(" - Latitude")
+            } else {
+                Text(" - Longitude")
             }
-            .font(.largeTitle)
-            .bold()
-            Instructions
+            Spacer()
+            Button(action: {
+                showView = false
+            }, label: {
+                Text("x")
+            })
+            .buttonStyle(.bordered)
+            .padding(.trailing,10)
         }
-        .frame(maxWidth: .infinity)
+        .font(isPad ? .system(size: 25.0) : .title3)
+        .padding(.top, 10)
+        .padding(.top, 10)
+    }
+    
+    fileprivate var SwitchHemisphereButton: some View {
+        VStack {
+            Button(action: {
+                showDialog = true
+            }, label: {
+                Text("Switch Hemisphere")
+            })
+            .buttonStyle(.bordered)
+            .padding()
+        }
+        .font(isPad ? .system(size: 20.0) : .body)
     }
     
     fileprivate var Instructions: some View {
@@ -122,142 +156,189 @@ struct DecimalDegreesEntryView: View {
                 Text("button.")
             }
         }
-        .font(.footnote)
+        .font(isPad ? .system(size: 20.0) : .footnote)
     }
     
     fileprivate var DetailsView: some View {
-        HStack {
-            if !showDegreesPicker {
-                Text("\(Int(decimalDegrees))")
-                    .onTapGesture {
-                        togglePickerVisibility(.Degrees)
-                        plusMinusTarget = .DEGREES
+        VStack {
+            HStack {
+                Text(locObj.hemisphere)
+                if !showDegreesPicker {
+                    Text("\(Int(decimalDegrees))")
+                        .onTapGesture {
+                            togglePickerVisibility(.Degrees)
+                            plusMinusTarget = .DEGREES
+                        }
+                } else {
+                    Picker("", selection: $degrees) {
+                        ForEach(0...locObj.maxDegrees, id: \.self) { value in
+                            Text("\(value)")
+                                .font(isPad ? .system(size: 50.0) : .title3)
+                        }
                     }
-            } else {
-                Picker("", selection: $degrees) {
-                    ForEach(0...maxDegrees, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
+                    .pickerStyle(.wheel)
+                    .scaleEffect(1.0)
+                    .frame(width: 100, height: 100)
+                    .onChange(of: degrees) {
+                        updateDegreesValue()
                     }
                 }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 100, height: 100)
-                .onChange(of: degrees) {
-                    updateDegreesValue()
+                
+                Text(".")
+                
+                if !showTenthPicker {
+                    Text("\(degreeTenth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.Tenth)
+                            plusMinusTarget = .TENTH
+                        }
+                } else {
+                    Picker("", selection: $degreeTenth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(isPad ? .system(size: 50.0) : .title3)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .scaleEffect(1.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeTenth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
                 }
+                
+                if !showHundredthPicker {
+                    Text("\(degreeHundredth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.Hundredth)
+                            plusMinusTarget = .HUNDREDTH
+                        }
+                } else {
+                    Picker("", selection: $degreeHundredth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(isPad ? .system(size: 50.0) : .title3)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .scaleEffect(1.0)
+                    .frame(width: 50, height: 100)
+                    .onAppear {
+                        degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeHundredth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                }
+                
+                if !showThousandthPicker {
+                    Text("\(degreeThousandth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.Thousandth)
+                            plusMinusTarget = .THOUSANDTH
+                        }
+                } else {
+                    Picker("", selection: $degreeThousandth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(isPad ? .system(size: 50.0) : .title3)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .scaleEffect(1.0)
+                    .frame(width: 50, height: 90)
+                    .onAppear {
+                        degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeThousandth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                }
+                
+                if !showTenThousandthPicker {
+                    Text("\(degreeTenThousandth)")
+                        .padding(.leading, -5)
+                        .onTapGesture {
+                            togglePickerVisibility(.TenThousandth)
+                            plusMinusTarget = .TENTHOUSANDTH
+                        }
+                } else {
+                    Picker("", selection: $degreeTenThousandth) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text("\(value)")
+                                .font(isPad ? .system(size: 50.0) : .title3)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .scaleEffect(1.0)
+                    .frame(width: 50, height: 90)
+                    .onAppear {
+                        degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
+                    }
+                    .onChange(of: degreeTenThousandth) {
+                        updateDegreesValueDecimalDegreesFormat()
+                    }
+                }
+                
+                Text("°")
+                
             }
-
-            Text(".")
-
-            if !showTenthPicker {
-                Text("\(degreeTenth)")
-                    .padding(.leading, -5)
-                    .onTapGesture {
-                        togglePickerVisibility(.Tenth)
-                        plusMinusTarget = .TENTH
-                    }
-            } else {
-                Picker("", selection: $degreeTenth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 100)
-                .onAppear {
-                    degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeTenth) {
-                    updateDegreesValueDecimalDegreesFormat()
-                }
-            }
-            
-            if !showHundredthPicker {
-                Text("\(degreeHundredth)")
-                    .padding(.leading, -5)
-                    .onTapGesture {
-                        togglePickerVisibility(.Hundredth)
-                        plusMinusTarget = .HUNDREDTH
-                    }
-            } else {
-                Picker("", selection: $degreeHundredth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 100)
-                .onAppear {
-                    degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeHundredth) {
-                    updateDegreesValueDecimalDegreesFormat()
-                }
-            }
-            
-            if !showThousandthPicker {
-                Text("\(degreeThousandth)")
-                    .padding(.leading, -5)
-                    .onTapGesture {
-                        togglePickerVisibility(.Thousandth)
-                        plusMinusTarget = .THOUSANDTH
-                    }
-            } else {
-                Picker("", selection: $degreeThousandth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 90)
-                .onAppear {
-                    degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeThousandth) {
-                    updateDegreesValueDecimalDegreesFormat()
-                }
-            }
-
-            if !showTenThousandthPicker {
-                Text("\(degreeTenThousandth)")
-                    .padding(.leading, -5)
-                    .onTapGesture {
-                        togglePickerVisibility(.TenThousandth)
-                        plusMinusTarget = .TENTHOUSANDTH
-                    }
-            } else {
-                Picker("", selection: $degreeTenThousandth) {
-                    ForEach(0...9, id: \.self) { value in
-                        Text("\(value)")
-                            .font(Font.system(size: 40, weight: .regular, design: .default))
-                    }
-                }
-                .pickerStyle(.wheel)
-                .scaleEffect(1.0)
-                .frame(width: 40, height: 90)
-                .onAppear {
-                    degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
-                }
-                .onChange(of: degreeTenThousandth) {
-                    updateDegreesValueDecimalDegreesFormat()
-                }
-            }
-
-            Text("°")
-
+            .padding(.top, 0)
+            .padding(.bottom,5)
         }
-        .font(Font.system(size: 40, weight: .regular, design: .default))
-        .padding(.top, 0)
-        .padding(.bottom,5)
     }
     
+    fileprivate var UserDialog: some View {
+        VStack {
+            Text("Are you sure you want to switch hemisphere ?")
+                .font(.title)
+                .foregroundColor(.black)
+                .bold()
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 20) {
+                Button(action: {
+                    showDialog = false
+                    locObj.switchHemisphere(locIndex: locIndex)
+                }) {
+                    Text("Yes")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                Button(action: {
+                    // NO action
+                    showDialog = false
+                }) {
+                    Text("No")
+                        .frame(maxWidth: .infinity)
+                        .font(.title)
+                        .bold()
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                }
+
+            }
+        }
+        .padding()
+        .frame(maxWidth: 300)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+
+    }
+
     fileprivate func SwitchEdibility(target: DecimalDegrees_PlusMinusTarget) {
         
         togglePickerVisibility()
@@ -346,29 +427,39 @@ struct DecimalDegreesEntryView: View {
             })
             //.buttonStyle(.bordered)
         }
-        .padding(.top, 10)
-        .padding(.bottom, 10)
     }
     
     fileprivate func updateDegreesValue() {
         minutesInDecimalFormat = CalculateDecimalMinutesFromMinutesAndSeconds(minutes: minutesForRaymarineView)
-        locDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
-        if hemisphere == "S" || hemisphere == "W" {
-            locDegrees = -locDegrees
+        var newDegrees = CalculateDecimalDegrees(degrees: degrees, decimalMinutes: minutesInDecimalFormat)
+        decimalDegrees = newDegrees
+        if locObj.hemisphere == "S" || locObj.hemisphere == "W" {
+            newDegrees = -newDegrees
         }
+        if locObj.latLong == .Latitude {
+            locObj.locations[locIndex].coordinate.latitude = newDegrees
+        } else {
+            locObj.locations[locIndex].coordinate.longitude = newDegrees
+        }
+        locObj.updateLocations(loc1: locObj.locations[0], loc2: locObj.locations[1])
     }
     
     fileprivate func updateDegreesValueDecimalDegreesFormat() {
         let degrees = Int(decimalDegrees)
         let strDecimalDegrees = String(degrees) + "." + String(degreeTenth) + String(degreeHundredth) + String(degreeThousandth) +
             String(degreeTenThousandth)
-        if let test = Double(strDecimalDegrees) {
-            locDegrees = test
-            decimalDegrees = locDegrees
-            if hemisphere == "S" || hemisphere == "W" {
-                locDegrees = -locDegrees
+        if let newDegrees = Double(strDecimalDegrees) {
+            var modDegrees = newDegrees
+            if locObj.hemisphere == "S" ||  locObj.hemisphere == "W" {
+                modDegrees = -modDegrees
             }
-
+            if locObj.latLong == .Latitude {
+                locObj.locations[locIndex].coordinate.latitude = modDegrees
+            } else {
+                locObj.locations[locIndex].coordinate.longitude = modDegrees
+            }
+            decimalDegrees = newDegrees
+            locObj.updateLocations(loc1: locObj.locations[0], loc2: locObj.locations[1])
         }
     }
     
@@ -407,7 +498,7 @@ struct DecimalDegreesEntryView: View {
         
         switch plusMinusTarget {
         case .DEGREES:
-            if degrees < maxDegrees - 1 {
+            if degrees < locObj.maxDegrees - 1 {
                 decimalDegrees += 1
             }
         case .TENTH:
@@ -429,7 +520,7 @@ struct DecimalDegreesEntryView: View {
             else {
                 let fractionalMinute = Int(String("\(degreeTenth)\(degreeHundredth)\(degreeThousandth)\(degreeTenThousandth)"))
                 if fractionalMinute == 9999 {
-                    if Int(decimalDegrees.rounded()) < maxDegrees {
+                    if Int(decimalDegrees.rounded()) < locObj.maxDegrees {
                         decimalDegrees += 1
                     }
                     degreeTenth = 0
@@ -453,7 +544,7 @@ struct DecimalDegreesEntryView: View {
                                 degreeThousandth = 0
                                 degreeTenThousandth = 0
                             } else {
-                                if Int(decimalDegrees.rounded()) < maxDegrees - 1 {
+                                if Int(decimalDegrees.rounded()) < locObj.maxDegrees - 1 {
                                     decimalDegrees += 1
                                     degreeTenth = 0
                                     degreeHundredth = 0
@@ -477,6 +568,7 @@ struct DecimalDegreesEntryView: View {
         case .DEGREES:
             if degrees > 0 {
                 decimalDegrees -= 1
+                
             }
         case .TENTH:
             if degreeTenth  > 0 {
@@ -528,8 +620,7 @@ struct DecimalDegreesEntryView: View {
 }
 
 #Preview {
-    @Previewable @State var tmp = CLLocationDegrees(floatLiteral: 120.5890)
-    @Previewable @State var hemisphere: String = "W"    
-    DecimalDegreesEntryView(hemisphere: hemisphere, locDegrees: $tmp)
+    @Previewable @State var showView = true
+    let locObj = LocationObject()
+    DecimalDegreesEntryView(locObj: locObj, locIndex: 0, showView: $showView)
 }
-
