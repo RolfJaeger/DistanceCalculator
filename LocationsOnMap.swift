@@ -57,6 +57,7 @@ struct LocationsOnMap: View {
         }
         .onAppear {
             locObj.bReturningFromMapView = true
+            locObj.doneWithInitialization = true
         }
         .edgesIgnoringSafeArea(.bottom)
     }

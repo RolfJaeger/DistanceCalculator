@@ -22,6 +22,9 @@ class LocationObject: ObservableObject {
     @Published var maxDegrees = 180
     @Published var strDistance = "0.0"
     @Published var bReturningFromMapView = false
+    @Published var doneWithInitialization = false
+    //This is a crutch masking the bug that locations from the LocationDBView are only transferred to DistanceView after the LocationsOnMap view was visited
+    
     
     init() {
         Location1 = Location(coordinate: CLLocationCoordinate2D(latitude: 37, longitude: -122), name: "Location 1")

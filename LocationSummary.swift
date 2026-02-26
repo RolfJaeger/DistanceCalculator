@@ -23,7 +23,7 @@ struct LocationSummary: View {
         self.locObj = locObj
         self.locIndex = locIndex
     }
-    
+
     var body: some View {
         VStack {
             HStack {
@@ -36,7 +36,7 @@ struct LocationSummary: View {
                 })
                 .buttonStyle(.bordered)
                 .disabled(showDataEntryView)
-                if !showDataEntryView {
+                if !showDataEntryView && locObj.doneWithInitialization {
                     NavigationLink(
                         destination:
                             LocationDBView(locObj: locObj, locIndex: locIndex),

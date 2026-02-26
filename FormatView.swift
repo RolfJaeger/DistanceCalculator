@@ -56,6 +56,7 @@ struct FormatView: View {
             .buttonStyle(.bordered)
         }
     }
+    
 }
 
 #Preview {
