@@ -112,7 +112,10 @@ struct LocationDBView: View {
             Text("Current Location:")
                 .bold()
             HStack {
+                Text(locObj.getNorthSouth(locIndex))
                 Text(DegreesToStringInSelectedFormat(location: locObj.locations[locIndex], latLong: .Latitude, viewFormat: locObj.viewFormat))
+                Text(" | ")
+                Text(locObj.getEastWest(locIndex))
                 Text(DegreesToStringInSelectedFormat(location: locObj.locations[locIndex], latLong: .Longitude, viewFormat: locObj.viewFormat))
             }
         }
@@ -239,7 +242,13 @@ struct LocationDBView: View {
         VStack {
             if selectedCodableLocation != nil {
                 Button(action: {
-                    locObj.locations[locIndex] = Location(coordinate: CLLocationCoordinate2D(latitude: selectedCodableLocation!.coordinate.latitude, longitude: selectedCodableLocation!.coordinate.longitude), name: locObj.locations[locIndex].name)
+                    let newLocation = Location(coordinate: CLLocationCoordinate2D(latitude: selectedCodableLocation!.coordinate.latitude, longitude: selectedCodableLocation!.coordinate.longitude), name: locObj.locations[locIndex].name)
+                    //locObj.setToNewLocation(newLocation: newLocation, locIndex: locIndex)
+                    if locIndex == 0 {
+                        locObj.updateLocations(loc1: newLocation, loc2: locObj.locations[1])
+                    } else {
+                        locObj.updateLocations(loc1: locObj.locations[0], loc2: newLocation)
+                    }
                     selectedCodableLocation = nil
                     isLocationAlreadyInDB = true
                 }, label: {

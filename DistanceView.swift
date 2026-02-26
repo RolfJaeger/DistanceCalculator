@@ -23,130 +23,16 @@ struct DistanceView: View {
                 TitleView
                 FormatView(locObj: locObject)
                 DistanceView
-                HStack {
-                    Button(action: {
-                        if let userLocation = locationManager.lastKnownLocation {
-                            locObject.setLocationToCurrentLocation(currentLocation: userLocation, locIndex: 0)
-                        }
-                    }, label: {
-                        Text("Location 1")
-                    })
-                    .buttonStyle(.bordered)
-                    .disabled(showDataEntryView)
-                    if !showDataEntryView {
-                        NavigationLink(
-                            destination:
-                                LocationDBView(locObj: locObject, locIndex: 0),
-                            label: {
-                                Image(systemName: "bookmark")
-                            })
-                    }
-                }
-                .font(isPad ? .system(size: 30.0) : .title3)
-                .bold()
-                .padding(.bottom,5)
-                HStack {
-                    Text(locObject.getNorthSouth(0))
-                    Text("\(locObject.getLatitute(0))")
-                        .onTapGesture {
-                            if !showDataEntryView {
-                                showDataEntryView = true
-                                locIndex = 0
-                                locObject.latLong = .Latitude
-                                locObject.maxDegrees = 89
-                                locObject.setHemisphere(locIndex: 0)
-                            }
-                        }
-                    Text(" | ")
-                    Text(locObject.getEastWest(0))
-                    Text("\(locObject.getLongitute(0))")
-                        .onTapGesture {
-                            if !showDataEntryView {
-                                showDataEntryView = true
-                                locIndex = 0
-                                locObject.latLong = .Longitude
-                                locObject.maxDegrees = 179
-                                locObject.setHemisphere(locIndex: 0)
-                            }
-                        }
-                }
-                .font(isPad ? .system(size: 35.0) : .title3)
-                .padding(.bottom, 5)
-                HStack {
-                    Button(action: {
-                        if let userLocation = locationManager.lastKnownLocation {
-                            locObject.locations[1].coordinate.latitude = userLocation.latitude.rounded(toPlaces: 3)
-                            locObject.locations[1].coordinate.longitude = userLocation.longitude.rounded(toPlaces: 3)
-                        }
-                    }, label: {
-                        Text("Location 2")
-                            .bold()
-                    })
-                    .disabled(showDataEntryView)
-                    .buttonStyle(.bordered)
-                    if !showDataEntryView {
-                        NavigationLink(
-                            destination:
-                                LocationDBView(locObj: locObject, locIndex: 1),
-                            label: {
-                                Image(systemName: "bookmark")
-                            })
-                    }
-                }
-                .font(isPad ? .system(size: 30.0) : .title3)
-                .padding(.bottom,5)
-                HStack {
-                    Text(locObject.getNorthSouth(1))
-                    Text("\(locObject.getLatitute(1))")
-                        .onTapGesture {
-                            if !showDataEntryView {
-                                showDataEntryView = true
-                                locIndex = 1
-                                locObject.latLong = .Latitude
-                                locObject.maxDegrees = 89
-                                locObject.setHemisphere(locIndex: 1)
-                            }
-                        }
-                    Text(" | ")
-                    Text(locObject.getEastWest(1))
-                    Text("\(locObject.getLongitute(1))")
-                        .onTapGesture {
-                            if !showDataEntryView {
-                                showDataEntryView = true
-                                locIndex = 1
-                                locObject.latLong = .Longitude
-                                locObject.maxDegrees = 179
-                                locObject.setHemisphere(locIndex: 1)
-                            }
-                        }
-                }
-                .font(isPad ? .system(size: 35.0) : .title3)
+                LocationSummary(locObj: locObject, locIndex: 0, locIndexToProcess: $locIndex, showDataEntryView: $showDataEntryView)
+                LocationSummary(locObj: locObject, locIndex: 1, locIndexToProcess: $locIndex, showDataEntryView: $showDataEntryView)
                 if showDataEntryView {
-                    VStack {
-                        switch locObject.viewFormat {
-                        case .DMS:
-                            DMSEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
-                        case .DDM:
-                            DecimalDegreesEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
-                        case .Raymarine:
-                            RaymarineFormatEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
-                        }
-                    }
-                    //.frame(height: 75)
+                    DataEntryView
                 }
                 if !showDataEntryView {
                     HintView
                     Spacer()
                     if locObject.strDistance != "Too Large" {
-                        NavigationLink(
-                            destination:
-                                LocationsOnMap(locObj: locObject),
-                            label: {
-                                Text("Show Locations on Map")
-                                    .font(isPad ? .system(size: 25.0) : .title3)
-                                    .padding(.top, 20)
-                                    .padding(.bottom, 20)
-                            })
+                        LinkToMap
                     }
                 }
             }
@@ -156,7 +42,6 @@ struct DistanceView: View {
                     if let userLocation = self.locationManager.lastKnownLocation {
                         locObject.initializeLocationsWithCurrentLocation(currentLocation: userLocation)
                     }
-
                 }
             }
         }
@@ -179,6 +64,36 @@ struct DistanceView: View {
                 .font(isPad ? .system(size: 30.0) : .title3)
         }
     }
+    
+    private var DataEntryView: some View {
+        VStack {
+            VStack {
+                switch locObject.viewFormat {
+                case .DMS:
+                    DMSEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
+                case .DDM:
+                    DecimalDegreesEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
+                case .Raymarine:
+                    RaymarineFormatEntryView(locObj: locObject, locIndex: locIndex, showView: $showDataEntryView)
+                }
+            }
+        }
+    }
+    
+    private var LinkToMap: some View {
+        VStack {
+            NavigationLink(
+                destination:
+                    LocationsOnMap(locObj: locObject),
+                label: {
+                    Text("Show Locations on Map")
+                        .font(isPad ? .system(size: 25.0) : .title3)
+                        .padding(.top, 20)
+                        .padding(.bottom, 20)
+                })
+        }
+    }
+    
     fileprivate var HintView: some View {
         VStack {
             Text("Initially your location is shown.")

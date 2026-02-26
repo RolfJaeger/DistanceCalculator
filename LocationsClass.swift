@@ -34,11 +34,11 @@ class LocationObject: ObservableObject {
     }
 
     func initializeLocationsWithCurrentLocation(currentLocation: CLLocationCoordinate2D) {
-        for i in 0...1 {
-            locations[i].coordinate.latitude = currentLocation.latitude.rounded(toPlaces: 3)
-            locations[i].coordinate.longitude = currentLocation.longitude.rounded(toPlaces: 3)
-            locations[i].name = "Location \(i + 1)"
-        }
+        let newLocation1 = Location(coordinate: currentLocation, name: "Location 1")
+        let newLocation2 = Location(coordinate: currentLocation, name: "Location 2")
+        locations = [Location]()
+        locations.append(newLocation1)
+        locations.append(newLocation2)
         strDistance = CalculateDistance()
         region = setRegion()
     }
@@ -71,17 +71,21 @@ class LocationObject: ObservableObject {
         let p1 = CLLocationCoordinate2D(latitude: locations[0].coordinate.latitude, longitude: locations[0].coordinate.longitude)
         let p2 = CLLocationCoordinate2D(latitude: locations[1].coordinate.latitude, longitude: locations[1].coordinate.longitude)
 
-        let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
-        let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
-        let nauticalMilesPerKilometer = 0.539957
-        let distance = location2.distance(from: location1) * nauticalMilesPerKilometer / 1000
-        var strDistance: String
-        if distance > 5000 {
-            strDistance = "Too Large"
+        if p1.latitude == p2.latitude && p1.longitude == p2.longitude {
+            return "0.0000 nm"
         } else {
-            strDistance = String(format: "%.4f", distance) + " nm"
+            let location1 = CLLocation(latitude: p1.latitude, longitude: p1.longitude)
+            let location2 = CLLocation(latitude: p2.latitude, longitude: p2.longitude)
+            let nauticalMilesPerKilometer = 0.539957
+            let distance = location2.distance(from: location1) * nauticalMilesPerKilometer / 1000
+            var strDistance: String
+            if distance > 5000 {
+                strDistance = "Too Large"
+            } else {
+                strDistance = String(format: "%.4f", distance) + " nm"
+            }
+            return strDistance
         }
-        return strDistance
     }
 
     func getNorthSouth(_ index: Int) -> String {
@@ -156,6 +160,30 @@ class LocationObject: ObservableObject {
         } else {
             locations[locIndex].coordinate.longitude = newValue
         }
+        strDistance = CalculateDistance()
+        region = setRegion()
+    }
+    
+    func setToNewLocation(newLocation: Location, locIndex: Int) {
+        locations[locIndex] = newLocation
+        strDistance = CalculateDistance()
+        region = setRegion()
+    }
+    
+    func updateLocations(indexToUpdate: Int, newLocation: CLLocationCoordinate2D) {
+        let newLocation = Location(coordinate: newLocation, name: locations[indexToUpdate].name)
+        var newLocations = [Location]()
+        switch indexToUpdate {
+        case 1:
+            newLocations.append(locations[0])
+            newLocations.append(newLocation)
+        default:
+            newLocations.append(newLocation)
+            newLocations.append(locations[1])
+        }
+        locations = [Location]()
+        locations.append(newLocations[0])
+        locations.append(newLocations[1])
         strDistance = CalculateDistance()
         region = setRegion()
     }

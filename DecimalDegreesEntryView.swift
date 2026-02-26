@@ -71,17 +71,17 @@ struct DecimalDegreesEntryView: View {
         _minutesForRaymarineView = State(initialValue: Int(decimalMinutes.rounded(toPlaces: 3)))
         let decimalSeconds = Int(((minutesInDecimalFormat - Double(minutesForRaymarineView))*60).rounded())
         
-        if let tryTenth = Int(extractTenth(degrees: decimalDegrees)) {
+        if let tryTenth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 1)) {
             _degreeTenth = State(initialValue: Int(tryTenth))
         }
-        if let tryHundredth = Int(extractHundredth(degrees: decimalDegrees)) {
+        if let tryHundredth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 2)) {
             _degreeHundredth = State(initialValue: Int(tryHundredth))
         }
-        if let tryThousandth = Int(extractThousandth(degrees: decimalDegrees)) {
+        if let tryThousandth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 3)) {
             _degreeThousandth = State(initialValue: Int(tryThousandth))
         }
         
-        if let tryTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees)) {
+        if let tryTenThousandth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 4)) {
             _degreeTenThousandth = State(initialValue: Int(tryTenThousandth))
         }
     }
@@ -204,7 +204,7 @@ struct DecimalDegreesEntryView: View {
                     .scaleEffect(1.0)
                     .frame(width: 50, height: 100)
                     .onAppear {
-                        degreeTenth = Int(extractTenth(degrees: decimalDegrees))!
+                        degreeTenth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 1))!
                     }
                     .onChange(of: degreeTenth) {
                         updateDegreesValueDecimalDegreesFormat()
@@ -229,7 +229,7 @@ struct DecimalDegreesEntryView: View {
                     .scaleEffect(1.0)
                     .frame(width: 50, height: 100)
                     .onAppear {
-                        degreeHundredth = Int(extractHundredth(degrees: decimalDegrees))!
+                        degreeHundredth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 2))!
                     }
                     .onChange(of: degreeHundredth) {
                         updateDegreesValueDecimalDegreesFormat()
@@ -254,7 +254,7 @@ struct DecimalDegreesEntryView: View {
                     .scaleEffect(1.0)
                     .frame(width: 50, height: 90)
                     .onAppear {
-                        degreeThousandth = Int(extractThousandth(degrees: decimalDegrees))!
+                        degreeThousandth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 3))!
                     }
                     .onChange(of: degreeThousandth) {
                         updateDegreesValueDecimalDegreesFormat()
@@ -279,7 +279,7 @@ struct DecimalDegreesEntryView: View {
                     .scaleEffect(1.0)
                     .frame(width: 50, height: 90)
                     .onAppear {
-                        degreeTenThousandth = Int(extractTenThousandth(degrees: decimalDegrees))!
+                        degreeTenThousandth = Int(extractDigitAtSpecifiedLocationAfterPeriod(degrees: decimalDegrees, position: 4))!
                     }
                     .onChange(of: degreeTenThousandth) {
                         updateDegreesValueDecimalDegreesFormat()

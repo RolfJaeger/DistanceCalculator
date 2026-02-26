@@ -29,6 +29,13 @@ extension Double {
     }
 }
 
+extension String {
+    subscript(characterIndex: Int) -> Character {
+        let index = self.index(self.startIndex, offsetBy: characterIndex)
+        return self[index]
+    }
+}
+
 struct Location: Identifiable, Hashable, Equatable {
     let id = UUID()
     var coordinate: CLLocationCoordinate2D
@@ -238,62 +245,14 @@ func DegreesInRaymarineFormat(degrees: CLLocationDegrees) -> String {
     return "\(d)\u{00B0} \(fractualMinutes)'"
 }
 
-
-func extractTenth(degrees: CLLocationDegrees) -> String {
-    //print("Degrees in extractTenth: \(String(degrees))")
-    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
-    let strDegrees = String(degreesRounded)
-    let periodIndex = strDegrees.firstIndex(of: ".")
-    //NOTE: CLLocationsDegrees values ALWAYS contain a period
-    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 1 {
-        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
-        let tensIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 1, limitedBy: strDegrees.endIndex)
-        return String(strDegrees[tensIndex!])
-    } else {
-        return "0"
-    }
-}
-
-func extractHundredth(degrees: CLLocationDegrees) -> String {
-    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
-    let strDegrees = String(degreesRounded)
-    let periodIndex = strDegrees.firstIndex(of: ".")
-    //NOTE: CLLocationsDegrees values ALWAYS contain a period
-    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 2 {
-        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
-        let hundredsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 2, limitedBy: strDegrees.endIndex)
-        return String(strDegrees[hundredsIndex!])
-    } else {
-        return "0"
-    }
-}
-
-func extractThousandth(degrees: CLLocationDegrees) -> String {
-    let degreesRounded = Double(degrees).rounded(toPlaces: 3)
-    let strDegrees = String(degreesRounded)
-    let periodIndex = strDegrees.firstIndex(of: ".")
-    //NOTE: CLLocationsDegrees values ALWAYS contain a period
-    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 3 {
-        let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
-        let thousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 3, limitedBy: strDegrees.endIndex)
-        return String(strDegrees[thousandsIndex!])
-    } else {
-        return "0"
-    }
-}
-
-func extractTenThousandth(degrees: CLLocationDegrees) -> String {
+func extractDigitAtSpecifiedLocationAfterPeriod(degrees: CLLocationDegrees, position: Int) -> String {
     let degreesRounded = Double(degrees).rounded(toPlaces: 4)
     let strDegrees = String(degreesRounded)
     let periodIndex = strDegrees.firstIndex(of: ".")
-    //NOTE: CLLocationsDegrees values ALWAYS contain a period
-    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > 4 {
+    if strDegrees.distance(from: periodIndex!, to: strDegrees.endIndex) > position {
         let periodPosition: Int = strDegrees.distance(from: strDegrees.startIndex, to: periodIndex!)
-        let tenthousandsIndex = strDegrees.index(strDegrees.startIndex, offsetBy: periodPosition + 4, limitedBy: strDegrees.endIndex)
-        return String(strDegrees[tenthousandsIndex!])
+        return String(strDegrees[periodPosition + position])
     } else {
         return "0"
     }
 }
-
-
